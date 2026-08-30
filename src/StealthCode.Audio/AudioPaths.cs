@@ -17,4 +17,7 @@ internal static class AudioPaths
 
     /// <summary>Where the Whisper model is downloaded to unless the user picks somewhere else.</summary>
     public static readonly string DefaultModel = Path.Combine(Root, "models", "ggml-base.bin");
+
+    /// <summary>Marker left behind while the graphics-card runtime is loading.</summary>
+    public static readonly string GpuLoadMarker = Path.Combine(Root, "gpu-probe.lock");
 }

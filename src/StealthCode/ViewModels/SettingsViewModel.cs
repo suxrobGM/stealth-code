@@ -61,6 +61,9 @@ public sealed partial class SettingsViewModel(
     public partial string AudioSystemPrompt { get; set; } = "";
 
     [ObservableProperty]
+    public partial bool AudioUseGpu { get; set; }
+
+    [ObservableProperty]
     public partial bool IsModelDownloading { get; set; }
 
     [ObservableProperty]
@@ -185,6 +188,12 @@ public sealed partial class SettingsViewModel(
         settingsService.SaveDebounced();
     }
 
+    partial void OnAudioUseGpuChanged(bool value)
+    {
+        settingsService.Settings.Audio.UseGpu = value;
+        settingsService.SaveDebounced();
+    }
+
     [RelayCommand]
     private void SelectRegion()
     {
@@ -235,6 +244,7 @@ public sealed partial class SettingsViewModel(
         AudioHotkey = settings.Audio.Hotkey;
         AudioModelPath = settings.Audio.ModelPath;
         AudioSystemPrompt = settings.Audio.SystemPrompt;
+        AudioUseGpu = settings.Audio.UseGpu;
         DownloadModelButtonText = ModelDownloadService.ModelExists(settings.Audio.ModelPath)
             ? "Model ready"
             : "Download Model";

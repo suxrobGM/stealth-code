@@ -57,7 +57,15 @@ public sealed class AudioInjectorService(
         Task.Run(async () =>
         {
             AudioStateChanged?.Invoke(new AudioStateChangedEventArgs(false, "Transcribing audio..."));
-            var transcript = await transcriptionService.TranscribeAsync(wavPath, audio.ModelPath);
+            var useGpuBefore = audio.UseGpu;
+            var transcript = await transcriptionService.TranscribeAsync(wavPath, audio);
+
+            // Transcribing clears UseGpu when the graphics card closed the app last run and was skipped.
+            if (audio.UseGpu != useGpuBefore)
+            {
+                settingsService.Save();
+            }
+
             if (string.IsNullOrWhiteSpace(transcript))
             {
                 AudioStateChanged?.Invoke(new AudioStateChangedEventArgs(false, ""));

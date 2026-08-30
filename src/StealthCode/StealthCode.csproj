@@ -23,6 +23,8 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <InvariantGlobalization>true</InvariantGlobalization>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <!-- Without this, published builds report no AVX support and Whisper refuses to run on the CPU. -->
+    <IlcInstructionSet>avx</IlcInstructionSet>
   </PropertyGroup>
 
   <ItemGroup>
