@@ -25,16 +25,16 @@ No test projects exist yet.
 - **Pattern:** MVVM with CommunityToolkit.Mvvm (source generators)
 - **DI:** Module registrar pattern — `services.AddTerminal()`, `services.AddScreenCapture()`, `services.AddAudioCapture()`. Stateful services are singletons. Stateless services are static classes.
 - **Messaging:** `WeakReferenceMessenger` with explicit `Register<T>` (no `RegisterAll` — AOT incompatible)
-- **Terminal:** xterm.js in `NativeWebView` (WebView2), bridged via PTY
+- **Terminal:** xterm.js in `NativeWebView` (WebView2), bridged via ConPTY
 
 ## Project Structure
 
 ```text
 src/
   StealthCode/                  # Main UI app (composition root, MVVM, orchestrators)
-  StealthCode.Terminal/         # PTY library (winpty via Quick.PtyNet)
+  StealthCode.Terminal/         # PTY library (ConPTY via Quick.PtyNet)
   StealthCode.ScreenCapture/    # Win32 screen capture (GDI BitBlt/PrintWindow, PngWriter)
-  StealthCode.Audio/            # WASAPI loopback capture (NAudio) + Whisper.net transcription
+  StealthCode.Audio/            # WASAPI loopback capture (Win32 interop) + Whisper.net transcription
   StealthCode.Updater/          # GitHub release checker + self-update downloader
   StealthCode.Launcher/         # Self-extracting AOT launcher
 scripts/

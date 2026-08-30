@@ -12,10 +12,10 @@ Developer reference for contributing to Stealth Code. For a feature-level overvi
 | DI | Microsoft.Extensions.DependencyInjection |
 | Messaging | `WeakReferenceMessenger` (explicit `Register<T>` — `RegisterAll` is AOT incompatible) |
 | Terminal | xterm.js in WebView2 (`Avalonia.Controls.WebView`) |
-| PTY | winpty via Quick.PtyNet |
+| PTY | ConPTY via Quick.PtyNet |
 | Screen capture | Win32 GDI (`BitBlt`, `PrintWindow`) |
-| Audio capture | NAudio WASAPI loopback |
-| Transcription | Whisper.net (whisper.cpp) |
+| Audio capture | WASAPI loopback (Win32 COM interop) |
+| Transcription | Whisper.net (whisper.cpp), CPU backend by default |
 
 ## Project Structure
 

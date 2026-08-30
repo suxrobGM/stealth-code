@@ -2,12 +2,28 @@
 
 All notable changes to Stealth Code will be documented in this file.
 
+## [Unreleased]
+
+### Fixes
+
+- Whisper now works in published builds - ILC's default x64 baseline omits AVX, so `Avx.IsSupported` was always false and Whisper.net refused its CPU backend. Fixed with `IlcInstructionSet=avx`
+- Whisper no longer kills the app when CUDA fails to load - a failed load aborts the process instead of falling back, so the backend is pinned to a single runtime, CPU by default
+- Switching CLI providers no longer drops you into the fallback shell - the killed process reported its exit after the replacement had started and was read as a crash. PTY processes are now generation-tagged
+- Whisper load failures report the underlying error instead of a bare "Failed to load Whisper model"
+
+### Improvements
+
+- Terminal switched from winpty to ConPTY, restoring colour runs, wide glyphs, and the alternate screen buffer; winpty natives dropped from the published payload
+- PTY children get a repaired `PATH` (inherited entries plus machine and user registry entries), so a stripped environment cannot produce a session that fails to find the CLI
+- Optional CUDA backend for Whisper under Settings > Audio, guarded by a sentinel that disarms it if a load aborts
+- Updated Avalonia 11.3.13 → 11.3.20, Avalonia.Controls.WebView 11.4.0 → 11.4.1, Whisper.net 1.9.0 → 1.9.1, Microsoft.Extensions.DependencyInjection 10.0.5 → 10.0.11
+
 ## [1.1.0] - 2026-04-02
 
 ### Features
 
-- **Multi-capture mode** — Accumulate multiple screenshots (e.g., scrollable content) with `Ctrl+Shift+X`, then send all at once with `Ctrl+Shift+C`. Uses a dedicated prompt that handles overlapping regions from scrolling.
-- **No-focus mode** — Toggle with `Ctrl+Shift+F` to prevent the window from stealing focus when clicked, keeping your browser or other app active. Indicator shown in the title bar.
+- **Multi-capture mode** - Accumulate multiple screenshots (e.g., scrollable content) with `Ctrl+Shift+X`, then send all at once with `Ctrl+Shift+C`. Uses a dedicated prompt that handles overlapping regions from scrolling.
+- **No-focus mode** - Toggle with `Ctrl+Shift+F` to prevent the window from stealing focus when clicked, keeping your browser or other app active. Indicator shown in the title bar.
 
 ## [1.0.5] - 2026-04-01
 

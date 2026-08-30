@@ -4,7 +4,7 @@ A technical overview of how Stealth Code works under the hood.
 
 ## Screen Capture Protection
 
-Stealth Code uses the Windows [`SetWindowDisplayAffinity`](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setwindowdisplayaffinity) API to make the window invisible to all screen capture methods — screenshots, recordings, and screen sharing.
+Stealth Code uses the Windows [`SetWindowDisplayAffinity`](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setwindowdisplayaffinity) API to make the window invisible to all screen capture methods - screenshots, recordings, and screen sharing.
 
 When the window opens, the app sets the display affinity flag on the window handle:
 
@@ -26,11 +26,11 @@ PTY stdout → C# → base64 encode → WebView2 bridge → xterm.js renders
 
 **How it connects:**
 
-1. **PTY backend** — Uses [winpty](https://github.com/rprichard/winpty) (via Quick.PtyNet) to spawn a hidden console process (e.g., `claude`). Winpty uses screen-scraping rather than ConPTY, which avoids rendering bugs on newer Windows 11 builds.
-2. **WebView bridge** — A `NativeWebView` control hosts xterm.js. User keystrokes are sent as JSON messages from JavaScript to C# via `invokeCSharpAction()`. PTY output is base64-encoded and written to xterm via `InvokeScript("termWrite(...)")`.
-3. **Resize sync** — xterm.js reports column/row changes via `ResizeObserver`, which propagates to the PTY so the shell reflows correctly.
+1. **PTY backend** - Uses [ConPTY](https://devblogs.microsoft.com/commandline/windows-command-line-introducing-the-windows-pseudo-console-conpty/) via Quick.PtyNet, which imports a bundled `conpty.dll` it does not ship - `ConPtyProvider` redirects those imports to `kernel32`. Replaces winpty, whose screen-scraping lost colour runs, wide glyphs, and the alternate screen buffer.
+2. **WebView bridge** - A `NativeWebView` control hosts xterm.js. User keystrokes are sent as JSON messages from JavaScript to C# via `invokeCSharpAction()`. PTY output is base64-encoded and written to xterm via `InvokeScript("termWrite(...)")`.
+3. **Resize sync** - xterm.js reports column/row changes via `ResizeObserver`, which propagates to the PTY so the shell reflows correctly.
 
-The terminal supports full 256-color ANSI, cursor positioning, and alternate screen buffers — everything a modern CLI expects.
+The terminal supports full 256-color ANSI, cursor positioning, and alternate screen buffers - everything a modern CLI expects.
 
 ## Screenshot Capture & Injection
 
@@ -46,10 +46,10 @@ Stealth Code can capture your screen and inject the screenshot directly into the
 
 **The capture pipeline:**
 
-1. **GDI capture** — Creates a compatible device context and bitmap, performs the blit, and wraps it in a RAII struct (`GdiBitmap`) that auto-releases resources.
-2. **PNG encoding** — A custom `PngWriter` encodes the bitmap as PNG with zero external dependencies — writes IHDR, IDAT (deflated), and IEND chunks with CRC32 checksums. BGRA pixel data from GDI is converted to RGBA in-place before encoding.
-3. **Save** — The PNG is saved to `%APPDATA%/StealthCode/captures/capture_<timestamp>.png`.
-4. **Inject** — The file path is sent to the PTY as a formatted prompt: the configured system prompt + the screenshot path. The CLI reads the file and responds with its analysis.
+1. **GDI capture** - Creates a compatible device context and bitmap, performs the blit, and wraps it in a RAII struct (`GdiBitmap`) that auto-releases resources.
+2. **PNG encoding** - A custom `PngWriter` encodes the bitmap as PNG with zero external dependencies - writes IHDR, IDAT (deflated), and IEND chunks with CRC32 checksums. BGRA pixel data from GDI is converted to RGBA in-place before encoding.
+3. **Save** - The PNG is saved to `%APPDATA%/StealthCode/captures/capture_<timestamp>.png`.
+4. **Inject** - The file path is sent to the PTY as a formatted prompt: the configured system prompt + the screenshot path. The CLI reads the file and responds with its analysis.
 
 For minimized windows, the app restores them briefly via `ShowWindow(SW_RESTORE)` and waits 200ms for the window to render before capturing.
 
@@ -59,9 +59,9 @@ For content that doesn't fit in a single screenshot (e.g., long coding problems 
 
 **The flow:**
 
-1. Press `Ctrl+Shift+X` to take the first screenshot — the title bar shows a capture counter.
+1. Press `Ctrl+Shift+X` to take the first screenshot - the title bar shows a capture counter.
 2. Scroll the content and press `Ctrl+Shift+X` again to capture the next portion. Repeat as needed.
-3. Press `Ctrl+Shift+C` to finalize — all accumulated screenshots are sent to the CLI with a special prompt that instructs the AI to treat them as one continuous document and ignore overlapping regions from scrolling.
+3. Press `Ctrl+Shift+C` to finalize - all accumulated screenshots are sent to the CLI with a special prompt that instructs the AI to treat them as one continuous document and ignore overlapping regions from scrolling.
 
 Each screenshot is saved as a separate PNG. The multi-capture system prompt is configurable independently from the single-capture prompt.
 
@@ -71,23 +71,23 @@ Stealth Code can be configured to **not steal focus** from other windows when cl
 
 **How it works:**
 
-Toggling no-focus mode (`Ctrl+Shift+F`) adds the [`WS_EX_NOACTIVATE`](https://learn.microsoft.com/en-us/windows/win32/winmsg/extended-window-styles) extended window style to the window via `SetWindowLongPtr`. This tells Windows not to activate the window on mouse clicks — the previously focused application retains keyboard focus.
+Toggling no-focus mode (`Ctrl+Shift+F`) adds the [`WS_EX_NOACTIVATE`](https://learn.microsoft.com/en-us/windows/win32/winmsg/extended-window-styles) extended window style to the window via `SetWindowLongPtr`. This tells Windows not to activate the window on mouse clicks - the previously focused application retains keyboard focus.
 
 When active, a "NO-FOCUS" indicator appears in the title bar. All global hotkeys (capture, audio, opacity) continue to work since they use `RegisterHotKey` and don't require window focus. Press the hotkey again to re-enable normal focus for typing in the terminal.
 
 ## Audio Capture & Transcription
 
-Stealth Code records system audio (what you hear through your speakers/headphones) and transcribes it using a local Whisper model — no cloud services involved.
+Stealth Code records system audio (what you hear through your speakers/headphones) and transcribes it using a local Whisper model - no cloud services involved.
 
 **The audio pipeline:**
 
-1. **WASAPI loopback** — Uses [NAudio](https://github.com/naudio/NAudio)'s `WasapiLoopbackCapture` to tap into the system audio output. This captures all audio playing on the default output device (meeting audio, YouTube, etc.).
-2. **Format conversion** — Raw audio (typically 48kHz stereo float32) is converted to 16kHz mono int16 PCM, which is what Whisper expects. This involves:
+1. **WASAPI loopback** - Opens the default render endpoint in loopback mode through hand-rolled WASAPI COM interop (`GeneratedComInterface`, no NAudio dependency). This captures all audio playing on the default output device (meeting audio, YouTube, etc.).
+2. **Format conversion** - Raw audio (typically 48kHz stereo float32) is converted to 16kHz mono int16 PCM, which is what Whisper expects. This involves:
    - Parsing IEEE float32 or int16 samples
    - Downmixing stereo/multichannel to mono by averaging channels
    - Resampling to 16kHz via linear interpolation
-3. **Whisper transcription** — [Whisper.net](https://github.com/sandrohanea/whisper.net) (a C# wrapper around whisper.cpp) runs the `ggml-base` model locally. It auto-selects the best available backend: CUDA > Vulkan > CPU.
-4. **Inject** — The transcription text is wrapped with the configured system prompt and sent to the PTY, just like screenshot injection.
+3. **Whisper transcription** - [Whisper.net](https://github.com/sandrohanea/whisper.net) (a C# wrapper around whisper.cpp) runs the `ggml-base` model locally on the CPU backend. Whisper.net's default order tries CUDA first and falls through on failure, but a failed CUDA load aborts the process rather than falling back, so `WhisperRuntime` pins the order to a single backend. CUDA is opt-in under Settings > Audio, guarded by a sentinel that disarms it if a load aborts.
+4. **Inject** - The transcription text is wrapped with the configured system prompt and sent to the PTY, just like screenshot injection.
 
 **Usage is toggle-based:** press the hotkey once to start recording, press again to stop. The transcription runs asynchronously, and results appear in the terminal once ready.
 
@@ -98,16 +98,16 @@ The opacity slider uses Win32 **layered window attributes** rather than Avalonia
 1. Adds the `WS_EX_LAYERED` extended window style via `SetWindowLongPtr`
 2. Calls `SetLayeredWindowAttributes` with `LWA_ALPHA` flag and a byte alpha value (0-255)
 
-This makes the entire window — including the WebView2 terminal — uniformly transparent, so you can read code underneath while keeping the AI response visible.
+This makes the entire window - including the WebView2 terminal - uniformly transparent, so you can read code underneath while keeping the AI response visible.
 
 ## Auto-Updates
 
 The app checks GitHub Releases for new versions and can update itself in-place.
 
-1. **Check** — `GitHubReleaseClient` fetches the latest release from the GitHub API and compares semantic versions.
-2. **Download** — If a newer version exists, the `.zip` release artifact is downloaded with chunked streaming and progress reporting.
-3. **Extract** — The new `stealthcode.exe` launcher is extracted from the zip to a temporary file.
-4. **Swap** — A batch script is generated that:
+1. **Check** - `GitHubReleaseClient` fetches the latest release from the GitHub API and compares semantic versions.
+2. **Download** - If a newer version exists, the `.zip` release artifact is downloaded with chunked streaming and progress reporting.
+3. **Extract** - The new `stealthcode.exe` launcher is extracted from the zip to a temporary file.
+4. **Swap** - A batch script is generated that:
    - Waits for the current process to exit
    - Replaces the old launcher with the new one
    - Cleans up the old extracted binaries
@@ -116,7 +116,7 @@ The app checks GitHub Releases for new versions and can update itself in-place.
 
 ## Launcher (Single-File Distribution)
 
-Stealth Code ships as a single `stealthcode.exe` — a lightweight AOT-compiled launcher with the entire app embedded as compressed resources.
+Stealth Code ships as a single `stealthcode.exe` - a lightweight AOT-compiled launcher with the entire app embedded as compressed resources.
 
 **On first run:**
 
