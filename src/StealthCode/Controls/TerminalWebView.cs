@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Avalonia.Controls;
+using Avalonia.Platform;
 using Avalonia.Threading;
 using StealthCode.Terminal;
 
@@ -12,6 +13,7 @@ public sealed class TerminalWebView : UserControl, IDisposable
     private readonly List<byte> outputBuffer = [];
     private readonly Lock bufferLock = new();
     private bool terminalReady;
+    private bool documentLoaded;
     private int pendingCols;
     private int pendingRows;
 
@@ -28,13 +30,15 @@ public sealed class TerminalWebView : UserControl, IDisposable
         this.ptyService.ProcessExited += OnPtyProcessExited;
 
         webView = new NativeWebView();
+        webView.EnvironmentRequested += OnEnvironmentRequested;
+        webView.NavigationStarted += OnNavigationStarted;
+        webView.NewWindowRequested += OnNewWindowRequested;
         webView.NavigationCompleted += OnNavigationCompleted;
         webView.WebMessageReceived += OnWebMessageReceived;
 
         Content = webView;
 
-        var htmlPath = TerminalAssets.GetTerminalHtmlPath();
-        webView.Source = new Uri($"file:///{htmlPath.Replace('\\', '/')}");
+        webView.NavigateToString(TerminalAssets.GetTerminalHtml(), TerminalAssets.BaseUri);
     }
 
     public void StartProcess(string command, string[] args, string workingDirectory)
@@ -56,10 +60,45 @@ public sealed class TerminalWebView : UserControl, IDisposable
         webView?.InvokeScript("termReset()");
     }
 
+    /// <summary>
+    /// Gives the WebView host a throwaway profile under the temp directory instead of letting it keep a
+    /// browsing profile next to the executable, so a session leaves nothing behind once it ends.
+    /// </summary>
+    private static void OnEnvironmentRequested(object? sender, WebViewEnvironmentRequestedEventArgs e)
+    {
+#if DEBUG
+        e.EnableDevTools = true;
+#endif
+
+        if (e is WindowsWebView2EnvironmentRequestedEventArgs webView2)
+        {
+            webView2.UserDataFolder = TerminalPaths.WebViewProfile;
+            webView2.IsInPrivateModeEnabled = true;
+        }
+    }
+
+    /// <summary>
+    /// Terminal output is untrusted text, so once the terminal document is up nothing is allowed to navigate
+    /// this WebView again. The event carries no URI, so the first navigation — the one that loads the
+    /// terminal itself — is the only one that can be told apart, and everything after it is refused.
+    /// </summary>
+    private void OnNavigationStarted(object? sender, WebViewNavigationStartingEventArgs e)
+    {
+        e.Cancel = documentLoaded;
+    }
+
+    /// <summary>Nothing printed to a terminal should be able to open a browser window.</summary>
+    private static void OnNewWindowRequested(object? sender, WebViewNewWindowRequestedEventArgs e)
+    {
+        e.Handled = true;
+    }
+
     private void OnNavigationCompleted(object? sender, WebViewNavigationCompletedEventArgs e)
     {
         if (e.IsSuccess)
         {
+            documentLoaded = true;
+
             // Re-send ready in case invokeCSharpAction wasn't injected when terminal.js first ran
             webView?.InvokeScript("sendMessage({ type: 'ready', cols: term.cols, rows: term.rows })");
         }
@@ -163,10 +202,17 @@ public sealed class TerminalWebView : UserControl, IDisposable
 
         if (webView is not null)
         {
+            webView.EnvironmentRequested -= OnEnvironmentRequested;
+            webView.NavigationStarted -= OnNavigationStarted;
+            webView.NewWindowRequested -= OnNewWindowRequested;
             webView.NavigationCompleted -= OnNavigationCompleted;
             webView.WebMessageReceived -= OnWebMessageReceived;
             Content = null;
             webView = null;
         }
+
+        // The host holds the profile open until it is torn down, so this generally clears a previous
+        // session's folder and leaves this one for the next launch to collect.
+        TerminalPaths.CleanupProfiles();
     }
 }

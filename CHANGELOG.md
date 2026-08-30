@@ -18,6 +18,9 @@ All notable changes to Stealth Code will be documented in this file.
 - Optional CUDA backend for Whisper under Settings > Audio, guarded by a sentinel that disarms it if a load aborts
 - Updated Whisper.net 1.9.0 → 1.9.1, Microsoft.Extensions.DependencyInjection 10.0.5 → 10.0.11
 - Migrated to Avalonia 12.1.1 (from 11.3.13) and Avalonia.Controls.WebView 12.1.0. `Avalonia.Diagnostics` has no v12 release and is replaced by `AvaloniaUI.DiagnosticsSupport`
+- Terminal assets are no longer unpacked to an `assets/` folder beside the executable - xterm's stylesheet and scripts are inlined into a single document handed to the WebView from memory
+- WebView2 runs on a throwaway InPrivate profile under the temp directory, so a session leaves no browsing data behind
+- Terminal output can no longer navigate the WebView away from the terminal document or open popup windows
 
 ## [1.1.0] - 2026-04-02
 

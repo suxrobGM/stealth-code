@@ -32,6 +32,10 @@ PTY stdout → C# → base64 encode → WebView2 bridge → xterm.js renders
 
 The terminal supports full 256-color ANSI, cursor positioning, and alternate screen buffers - everything a modern CLI expects.
 
+**Nothing on disk:** `TerminalAssets` inlines xterm's stylesheet and scripts from embedded resources into a single document and hands it to the WebView via `NavigateToString`, so the terminal is never unpacked to an `assets/` folder. The WebView2 host is pointed at an InPrivate profile under the temp directory that is deleted on the way out, so a session leaves behind no browsing data either.
+
+**Locked down:** terminal output is untrusted text, so once the terminal document has loaded, `NavigationStarted` refuses every further navigation and `NewWindowRequested` swallows popups. Nothing the CLI prints can navigate the WebView away or open a browser window.
+
 ## Screenshot Capture & Injection
 
 Stealth Code can capture your screen and inject the screenshot directly into the active CLI session for AI analysis.
