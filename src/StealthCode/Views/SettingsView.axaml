@@ -131,7 +131,7 @@
         <StackPanel Spacing="4">
           <TextBlock Classes="field-label" Text="Whisper Model" />
           <TextBox Classes="form-input"
-                   Watermark="Path to ggml-*.bin model file"
+                   PlaceholderText="Path to ggml-*.bin model file"
                    Text="{Binding AudioModelPath}" />
           <Button FontSize="11" Height="28"
                   Background="{StaticResource ControlBg}" Foreground="{StaticResource SecondaryFg}"

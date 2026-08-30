@@ -22,7 +22,7 @@
   </a>
   <br />
   <img src="https://img.shields.io/badge/.NET-10-512bd4?logo=dotnet" alt=".NET 10" />
-  <img src="https://img.shields.io/badge/Avalonia-11.3-8b44ac?logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZD0iTTEyIDJMMiAyMmgyMEwxMiAyeiIgZmlsbD0id2hpdGUiLz48L3N2Zz4=" alt="Avalonia 11.3" />
+  <img src="https://img.shields.io/badge/Avalonia-12.1-8b44ac?logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZD0iTTEyIDJMMiAyMmgyMEwxMiAyeiIgZmlsbD0id2hpdGUiLz48L3N2Zz4=" alt="Avalonia 12.1" />
   <img src="https://img.shields.io/badge/platform-Windows-0078d4?logo=windows" alt="Windows" />
 </p>
 

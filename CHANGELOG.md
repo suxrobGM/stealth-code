@@ -16,7 +16,8 @@ All notable changes to Stealth Code will be documented in this file.
 - Terminal switched from winpty to ConPTY, restoring colour runs, wide glyphs, and the alternate screen buffer; winpty natives dropped from the published payload
 - PTY children get a repaired `PATH` (inherited entries plus machine and user registry entries), so a stripped environment cannot produce a session that fails to find the CLI
 - Optional CUDA backend for Whisper under Settings > Audio, guarded by a sentinel that disarms it if a load aborts
-- Updated Avalonia 11.3.13 → 11.3.20, Avalonia.Controls.WebView 11.4.0 → 11.4.1, Whisper.net 1.9.0 → 1.9.1, Microsoft.Extensions.DependencyInjection 10.0.5 → 10.0.11
+- Updated Whisper.net 1.9.0 → 1.9.1, Microsoft.Extensions.DependencyInjection 10.0.5 → 10.0.11
+- Migrated to Avalonia 12.1.1 (from 11.3.13) and Avalonia.Controls.WebView 12.1.0. `Avalonia.Diagnostics` has no v12 release and is replaced by `AvaloniaUI.DiagnosticsSupport`
 
 ## [1.1.0] - 2026-04-02
 

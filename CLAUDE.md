@@ -20,7 +20,7 @@ No test projects exist yet.
 
 ## Architecture
 
-- **Framework:** .NET 10, Avalonia 11.3, PublishAot, full trim
+- **Framework:** .NET 10, Avalonia 12.1, PublishAot, full trim
 - **Platform:** Windows only
 - **Pattern:** MVVM with CommunityToolkit.Mvvm (source generators)
 - **DI:** Module registrar pattern — `services.AddTerminal()`, `services.AddScreenCapture()`, `services.AddAudioCapture()`. Stateful services are singletons. Stateless services are static classes.

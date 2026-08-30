@@ -10,12 +10,11 @@
         MinWidth="500" MinHeight="300"
         WindowStartupLocation="CenterScreen"
         ExtendClientAreaToDecorationsHint="True"
-        ExtendClientAreaChromeHints="NoChrome"
         ExtendClientAreaTitleBarHeightHint="28"
         Background="{StaticResource WindowBg}"
         Topmost="{Binding IsAlwaysOnTop}"
         ShowInTaskbar="False"
-        SystemDecorations="Full">
+        WindowDecorations="BorderOnly">
 
   <Grid RowDefinitions="28,*,20" ColumnDefinitions="*,Auto">
 

@@ -7,7 +7,7 @@ Developer reference for contributing to Stealth Code. For a feature-level overvi
 | Layer | Technology |
 | --- | --- |
 | Framework | .NET 10, PublishAot, full trim |
-| UI | Avalonia 11.3 with Fluent theme |
+| UI | Avalonia 12.1 with Fluent theme |
 | MVVM | CommunityToolkit.Mvvm (source generators) |
 | DI | Microsoft.Extensions.DependencyInjection |
 | Messaging | `WeakReferenceMessenger` (explicit `Register<T>` — `RegisterAll` is AOT incompatible) |

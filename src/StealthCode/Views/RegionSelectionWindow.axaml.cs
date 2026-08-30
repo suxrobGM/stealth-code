@@ -111,7 +111,9 @@ public partial class RegionSelectionWindow : Window
             return;
         }
 
-        var scaling = VisualRoot?.RenderScaling ?? 1.0;
+        // v12 removed IRenderRoot, so VisualRoot no longer exposes RenderScaling.
+        // This window is itself the TopLevel, so read it directly.
+        var scaling = RenderScaling;
         viewModel.Complete(
             (int)(x * scaling),
             (int)(y * scaling),
