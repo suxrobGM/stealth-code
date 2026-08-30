@@ -18,6 +18,8 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.11" />
     <PackageReference Include="Quick.PtyNet" Version="1.0.4" />
+    <!-- Drops the leftover winpty files; the package contains nothing else. -->
+    <PackageReference Include="Quick.PtyNet.WinPty" Version="1.0.2" ExcludeAssets="all" />
   </ItemGroup>
 
 </Project>

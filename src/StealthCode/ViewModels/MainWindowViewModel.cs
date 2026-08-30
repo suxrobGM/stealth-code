@@ -27,7 +27,6 @@ public sealed partial class MainWindowViewModel : ViewModelBase,
     private readonly UpdateService updateService;
     private IntPtr hwnd;
     private bool initialized;
-    private bool switching;
 
     public MainWindowViewModel(
         PtyService ptyService,
@@ -279,9 +278,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase,
 
         if (initialized)
         {
-            switching = true;
             WeakReferenceMessenger.Default.Send(new SwitchTerminalMessage(provider));
-            switching = false;
         }
     }
 
@@ -305,13 +302,14 @@ public sealed partial class MainWindowViewModel : ViewModelBase,
         }
     }
 
+    /// <summary>
+    /// Only reached for the terminal that is currently running: <see cref="PtyService"/> ignores exits from
+    /// processes it has already replaced, so a CLI switch cannot be mistaken for the new terminal dying.
+    /// </summary>
     private void OnProcessExited(int _)
     {
-        if (!switching)
-        {
-            PtyService.Stop();
-            WeakReferenceMessenger.Default.Send(new FallbackToShellMessage());
-        }
+        PtyService.Stop();
+        WeakReferenceMessenger.Default.Send(new FallbackToShellMessage());
     }
 
     private void RegisterGlobalHotkeys()
