@@ -6,13 +6,11 @@ namespace StealthCode.ScreenCapture.Services;
 
 public sealed partial class ScreenCaptureService
 {
-    private static readonly string CapturesDir = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StealthCode", "captures");
-
     public string Capture(CaptureSettings settings)
     {
-        Directory.CreateDirectory(CapturesDir);
-        var filePath = Path.Combine(CapturesDir, $"capture_{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}.png");
+        Directory.CreateDirectory(CapturePaths.Captures);
+        var filePath = Path.Combine(
+            CapturePaths.Captures, $"{CapturePaths.CapturePrefix}{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}.png");
 
         switch (settings.Mode)
         {

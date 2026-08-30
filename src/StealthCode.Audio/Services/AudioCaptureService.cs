@@ -8,9 +8,6 @@ namespace StealthCode.Audio.Services;
 [SupportedOSPlatform("windows")]
 public sealed class AudioCaptureService : IDisposable
 {
-    private static readonly string CapturesDir = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StealthCode", "captures");
-
     private readonly WasapiLoopbackCapture loopback = new();
     private MemoryStream? capturedPcm;
 
@@ -56,8 +53,9 @@ public sealed class AudioCaptureService : IDisposable
             return null;
         }
 
-        Directory.CreateDirectory(CapturesDir);
-        var wavPath = Path.Combine(CapturesDir, $"audio_{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}.wav");
+        Directory.CreateDirectory(AudioPaths.Captures);
+        var wavPath = Path.Combine(
+            AudioPaths.Captures, $"{AudioPaths.CapturePrefix}{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}.wav");
         AudioConverter.WriteWav(wavPath, samples, 16000);
 
         return wavPath;
