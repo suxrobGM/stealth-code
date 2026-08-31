@@ -1,7 +1,8 @@
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
 using StealthCode.ViewModels;
-using StealthCode.Views;
+using StealthCode.ViewModels.Settings;
+using StealthCode.Views.Settings;
 
 namespace StealthCode;
 

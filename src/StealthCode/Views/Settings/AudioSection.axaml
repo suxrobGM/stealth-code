@@ -1,0 +1,63 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:StealthCode.ViewModels.Settings"
+             xmlns:controls="using:StealthCode.Controls"
+             x:Class="StealthCode.Views.Settings.AudioSection"
+             x:DataType="vm:AudioSettingsViewModel">
+
+  <StackPanel Spacing="8">
+    <TextBlock Classes="section-header" Text="AUDIO CAPTURE" />
+
+    <StackPanel Spacing="4">
+      <TextBlock Classes="field-label" Text="Hotkey" />
+      <controls:HotkeyTextBox Hotkey="{Binding Hotkey, Mode=TwoWay}" />
+    </StackPanel>
+
+    <StackPanel Spacing="4">
+      <TextBlock Classes="field-label" Text="Whisper Model" />
+      <TextBox Classes="form-input"
+               PlaceholderText="Path to ggml-*.bin model file"
+               Text="{Binding ModelPath}" />
+      <Button Classes="form-button"
+              Command="{Binding DownloadModelCommand}"
+              IsEnabled="{Binding !IsModelDownloading}"
+              Content="{Binding DownloadModelButtonText}" />
+    </StackPanel>
+
+    <StackPanel Spacing="4">
+      <TextBlock Classes="field-label" Text="Run Whisper On" />
+      <ComboBox Classes="form-input" SelectedIndex="{Binding SelectedGpuBackendIndex}">
+        <ComboBoxItem Content="CPU" />
+        <ComboBoxItem Content="Vulkan - any graphics card" />
+        <ComboBoxItem Content="NVIDIA CUDA 13" />
+        <ComboBoxItem Content="NVIDIA CUDA 12 - older drivers and cards" />
+      </ComboBox>
+
+      <TextBlock Classes="field-hint"
+                 Text="Downloaded once into your user folder rather than bundled with the app. Applies on the next launch, or straight away if nothing has been transcribed yet this session. Falls back to the CPU if it cannot load." />
+
+      <TextBlock Classes="status-text" Text="{Binding GpuPackStatusText}"
+                 IsVisible="{Binding GpuPackStatusText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+
+      <StackPanel Orientation="Horizontal" Spacing="6" IsVisible="{Binding HasGpuPack}">
+        <Button Classes="form-button"
+                Command="{Binding ToggleGpuPackCommand}"
+                Content="{Binding GpuPackButtonText}"
+                IsEnabled="{Binding !IsGpuPackBusy}" />
+
+        <Button Classes="form-button" Content="Cancel"
+                Command="{Binding CancelGpuPackCommand}"
+                IsVisible="{Binding IsGpuPackBusy}" />
+      </StackPanel>
+    </StackPanel>
+
+    <StackPanel Spacing="4">
+      <TextBlock Classes="field-label" Text="Prompt" />
+      <TextBox Classes="form-input" Height="80"
+               AcceptsReturn="True" TextWrapping="Wrap"
+               Text="{Binding SystemPrompt}" />
+      <Button Classes="form-button compact" Content="Reset to Default"
+              Command="{Binding ResetPromptCommand}" />
+    </StackPanel>
+  </StackPanel>
+</UserControl>

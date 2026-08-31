@@ -2,7 +2,7 @@ using StealthCode.ScreenCapture.Models;
 
 namespace StealthCode.Messages;
 
-// SettingsViewModel -> MainWindowViewModel
+// Settings panel -> MainWindowViewModel
 public sealed record OpacityChangedMessage(double Opacity);
 public sealed record SettingsProviderChangedMessage(int Index);
 
@@ -14,7 +14,7 @@ public sealed record ApplyOpacityMessage(double Opacity);
 // Settings -> MainWindow: re-register hotkeys
 public sealed record HotkeyChangedMessage(string Name, string Hotkey);
 
-// SettingsViewModel -> MainWindow: request UI dialogs
+// Settings panel -> MainWindow: request UI dialogs
 public sealed record RequestRegionSelectionMessage;
 public sealed record RequestWindowSelectionMessage;
 
@@ -27,12 +27,13 @@ public sealed record NoFocusChangedMessage(bool IsNoFocus);
 // CaptureInjectorService -> MainWindowViewModel: multi-capture state changed
 public sealed record MultiCaptureChangedMessage(bool IsActive, int Count);
 
-// SettingsViewModel -> MainWindowViewModel: request model download
+// Settings panel <-> AudioViewModel: Whisper model download
 public sealed record ModelDownloadRequestedMessage(string ModelPath);
+public sealed record ModelDownloadCompletedMessage(bool Success);
 
 // Update notifications
 public sealed record UpdateAvailableMessage(bool Available);
 
-// MainWindow -> SettingsViewModel: dialog results
+// MainWindow -> settings panel: dialog results
 public sealed record RegionSelectedMessage(int X, int Y, int Width, int Height);
 public sealed record WindowSelectedMessage(nint Handle, string Title);

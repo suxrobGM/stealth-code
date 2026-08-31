@@ -1,0 +1,30 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:StealthCode.ViewModels"
+             xmlns:settings="using:StealthCode.ViewModels.Settings"
+             xmlns:views="using:StealthCode.Views.Settings"
+             x:Class="StealthCode.Views.Settings.SettingsView"
+             x:DataType="settings:SettingsViewModel"
+             Width="300" Background="{StaticResource PanelBg}">
+
+  <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <StackPanel Margin="16,12" Spacing="16">
+      <DockPanel>
+        <TextBlock DockPanel.Dock="Left" Text="Settings" FontSize="13"
+                   FontWeight="SemiBold" Foreground="{StaticResource PrimaryFg}"
+                   VerticalAlignment="Center" />
+        <Button Classes="chrome" DockPanel.Dock="Right" Content="&#x00D7;" FontSize="14"
+                Width="28" HorizontalAlignment="Right"
+                Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).ToggleSettingsCommand}" />
+      </DockPanel>
+
+      <views:GeneralSection DataContext="{Binding General}" />
+      <Border Classes="divider" />
+      <views:CaptureSection DataContext="{Binding Capture}" />
+      <Border Classes="divider" />
+      <views:AudioSection DataContext="{Binding Audio}" />
+      <Border Classes="divider" />
+      <views:UpdateSection DataContext="{Binding Updates}" />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

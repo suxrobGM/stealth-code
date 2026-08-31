@@ -38,27 +38,40 @@
   </Style>
 
   <!-- Form inputs -->
-  <Style Selector="ComboBox.form-input">
-    <Setter Property="FontSize" Value="11" />
-    <Setter Property="Height" Value="28" />
-    <Setter Property="Background" Value="{StaticResource ControlBg}" />
-    <Setter Property="Foreground" Value="{StaticResource PrimaryFg}" />
-    <Setter Property="BorderThickness" Value="0" />
-  </Style>
-
-  <Style Selector="TextBox.form-input">
+  <Style Selector="TextBox.form-input, ComboBox.form-input, NumericUpDown.form-input, Button.form-button">
     <Setter Property="FontSize" Value="11" />
     <Setter Property="Background" Value="{StaticResource ControlBg}" />
     <Setter Property="Foreground" Value="{StaticResource PrimaryFg}" />
     <Setter Property="BorderThickness" Value="0" />
   </Style>
 
-  <Style Selector="NumericUpDown.form-input">
-    <Setter Property="FontSize" Value="11" />
+  <!-- Single-line inputs; a TextBox grows to fit its content instead -->
+  <Style Selector="ComboBox.form-input, NumericUpDown.form-input, Button.form-button">
     <Setter Property="Height" Value="28" />
-    <Setter Property="Background" Value="{StaticResource ControlBg}" />
-    <Setter Property="Foreground" Value="{StaticResource PrimaryFg}" />
-    <Setter Property="BorderThickness" Value="0" />
+  </Style>
+
+  <!-- Inline form button (download, reset, pick a target) -->
+  <Style Selector="Button.form-button">
+    <Setter Property="Foreground" Value="{StaticResource SecondaryFg}" />
+    <Setter Property="HorizontalAlignment" Value="Left" />
+  </Style>
+
+  <Style Selector="Button.form-button.compact">
+    <Setter Property="Height" Value="26" />
+  </Style>
+
+  <!-- Explanatory text under a field -->
+  <Style Selector="TextBlock.field-hint">
+    <Setter Property="FontSize" Value="10" />
+    <Setter Property="Foreground" Value="{StaticResource MutedFg}" />
+    <Setter Property="TextWrapping" Value="Wrap" />
+  </Style>
+
+  <!-- Status line for a background operation -->
+  <Style Selector="TextBlock.status-text">
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+    <Setter Property="TextWrapping" Value="Wrap" />
   </Style>
 
 </Styles>

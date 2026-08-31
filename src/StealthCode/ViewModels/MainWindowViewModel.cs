@@ -11,6 +11,7 @@ using StealthCode.Services;
 using StealthCode.Terminal;
 using StealthCode.Updater.Services;
 using StealthCode.Utilities;
+using StealthCode.ViewModels.Settings;
 
 namespace StealthCode.ViewModels;
 
@@ -178,7 +179,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase,
         CleanupUtils.CleanupOldCaptures();
         AudioCleanupUtils.CleanupOldRecordings();
         WeakReferenceMessenger.Default.Send(new ApplyOpacityMessage(WindowOpacity));
-        Audio.Initialize(windowHandle, settingsViewModel);
+        Audio.Initialize(windowHandle);
         RegisterGlobalHotkeys();
         _ = CheckForUpdateOnStartupAsync();
     }

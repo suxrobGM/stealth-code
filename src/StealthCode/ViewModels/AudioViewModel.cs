@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using StealthCode.Audio.Services;
 using StealthCode.Messages;
 using StealthCode.Services;
+using StealthCode.Utilities;
 
 namespace StealthCode.ViewModels;
 
@@ -14,7 +15,6 @@ public sealed partial class AudioViewModel(
     ModelDownloadService modelDownloadService) : ViewModelBase, IRecipient<ModelDownloadRequestedMessage>
 {
     private IntPtr hwnd;
-    private SettingsViewModel? settingsViewModel;
 
     [ObservableProperty]
     public partial bool IsRecording { get; set; }
@@ -61,13 +61,12 @@ public sealed partial class AudioViewModel(
             StatusText = "Download failed";
         }
 
-        settingsViewModel?.OnDownloadCompleted(success);
+        WeakReferenceMessenger.Default.Send(new ModelDownloadCompletedMessage(success));
     }
 
-    public void Initialize(IntPtr windowHandle, SettingsViewModel settingsVm)
+    public void Initialize(IntPtr windowHandle)
     {
         hwnd = windowHandle;
-        settingsViewModel = settingsVm;
 
         IsModelAvailable = ModelDownloadService.ModelExists(settingsService.Settings.Audio.ModelPath);
         if (!IsModelAvailable)
@@ -138,14 +137,6 @@ public sealed partial class AudioViewModel(
 
     private void OnDownloadProgress(long downloaded, long total)
     {
-        if (total > 0)
-        {
-            var pct = (int)(downloaded * 100 / total);
-            StatusText = $"Downloading model... {downloaded / 1048576.0:F1}/{total / 1048576.0:F0} MB ({pct}%)";
-        }
-        else
-        {
-            StatusText = $"Downloading model... {downloaded / 1048576.0:F1} MB";
-        }
+        StatusText = $"Downloading model... {DownloadProgressText.Format(downloaded, total)}";
     }
 }

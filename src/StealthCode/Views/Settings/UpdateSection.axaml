@@ -1,0 +1,20 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:StealthCode.ViewModels.Settings"
+             x:Class="StealthCode.Views.Settings.UpdateSection"
+             x:DataType="vm:UpdateSettingsViewModel">
+
+  <StackPanel Spacing="8">
+    <TextBlock Classes="section-header" Text="UPDATES" />
+
+    <TextBlock Classes="field-label" Text="{Binding VersionText}" />
+
+    <TextBlock Classes="status-text" Text="{Binding StatusText}"
+               IsVisible="{Binding StatusText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+
+    <Button Classes="form-button"
+            Command="{Binding CheckForUpdateCommand}"
+            IsEnabled="{Binding !IsUpdating}"
+            Content="{Binding ButtonText}" />
+  </StackPanel>
+</UserControl>

@@ -1,6 +1,6 @@
 using Avalonia.Controls;
 
-namespace StealthCode.Views;
+namespace StealthCode.Views.Settings;
 
 public partial class SettingsView : UserControl
 {

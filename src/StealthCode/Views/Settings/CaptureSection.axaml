@@ -1,0 +1,56 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:StealthCode.ViewModels.Settings"
+             xmlns:controls="using:StealthCode.Controls"
+             x:Class="StealthCode.Views.Settings.CaptureSection"
+             x:DataType="vm:CaptureSettingsViewModel">
+
+  <StackPanel Spacing="8">
+    <TextBlock Classes="section-header" Text="SCREENSHOT CAPTURE" />
+
+    <StackPanel Spacing="4">
+      <TextBlock Classes="field-label" Text="Mode" />
+      <ComboBox Classes="form-input" SelectedIndex="{Binding SelectedModeIndex}">
+        <ComboBoxItem Content="Full Screen" />
+        <ComboBoxItem Content="Region" />
+        <ComboBoxItem Content="Window" />
+      </ComboBox>
+    </StackPanel>
+
+    <StackPanel Spacing="4" IsVisible="{Binding IsRegionMode}">
+      <Button Classes="form-button" Content="Select Region"
+              Command="{Binding SelectRegionCommand}" />
+      <TextBlock Classes="field-label" Text="{Binding RegionDisplayText}"
+                 IsVisible="{Binding RegionDisplayText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+    </StackPanel>
+
+    <StackPanel Spacing="4" IsVisible="{Binding IsWindowMode}">
+      <Button Classes="form-button" Content="Select Window"
+              Command="{Binding SelectWindowCommand}" />
+      <TextBlock Classes="field-label" Text="{Binding SelectedWindowTitle}"
+                 IsVisible="{Binding SelectedWindowTitle, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+    </StackPanel>
+
+    <StackPanel Spacing="4">
+      <TextBlock Classes="field-label" Text="Single Capture" />
+      <controls:HotkeyTextBox Hotkey="{Binding Hotkey, Mode=TwoWay}" />
+      <TextBlock Classes="field-hint" Text="Takes one screenshot and sends it immediately" />
+    </StackPanel>
+
+    <StackPanel Spacing="4">
+      <TextBlock Classes="field-label" Text="Multi-Capture" />
+      <controls:HotkeyTextBox Hotkey="{Binding MultiCaptureHotkey, Mode=TwoWay}" />
+      <TextBlock Classes="field-hint"
+                 Text="Press to accumulate screenshots (e.g. after scrolling), then press Single Capture to send all at once" />
+    </StackPanel>
+
+    <StackPanel Spacing="4">
+      <TextBlock Classes="field-label" Text="Prompt" />
+      <TextBox Classes="form-input" Height="80"
+               AcceptsReturn="True" TextWrapping="Wrap"
+               Text="{Binding SystemPrompt}" />
+      <Button Classes="form-button compact" Content="Reset to Default"
+              Command="{Binding ResetPromptCommand}" />
+    </StackPanel>
+  </StackPanel>
+</UserControl>

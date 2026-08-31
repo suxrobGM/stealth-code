@@ -9,6 +9,7 @@ using StealthCode.Services;
 using StealthCode.Terminal;
 using StealthCode.Updater;
 using StealthCode.ViewModels;
+using StealthCode.ViewModels.Settings;
 
 namespace StealthCode;
 
@@ -74,6 +75,12 @@ public partial class App : Application
         // ViewModels
         services.AddSingleton<AudioViewModel>();
         services.AddSingleton<MainWindowViewModel>();
+
+        // Settings panel
+        services.AddSingleton<GeneralSettingsViewModel>();
+        services.AddSingleton<CaptureSettingsViewModel>();
+        services.AddSingleton<AudioSettingsViewModel>();
+        services.AddSingleton<UpdateSettingsViewModel>();
         services.AddSingleton<SettingsViewModel>();
     }
 }

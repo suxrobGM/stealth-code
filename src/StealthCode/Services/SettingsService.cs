@@ -1,8 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using StealthCode.Audio.Models;
 using StealthCode.Models;
-using StealthCode.ScreenCapture.Models;
 
 namespace StealthCode.Services;
 

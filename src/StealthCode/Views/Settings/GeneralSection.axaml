@@ -1,0 +1,43 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:StealthCode.ViewModels.Settings"
+             xmlns:controls="using:StealthCode.Controls"
+             x:Class="StealthCode.Views.Settings.GeneralSection"
+             x:DataType="vm:GeneralSettingsViewModel">
+
+  <StackPanel Spacing="8">
+    <TextBlock Classes="section-header" Text="GENERAL" />
+
+    <StackPanel Spacing="4">
+      <TextBlock Classes="field-label" Text="Provider" />
+      <ComboBox Classes="form-input"
+                ItemsSource="{Binding ProviderNames}"
+                SelectedIndex="{Binding SelectedProviderIndex}" />
+    </StackPanel>
+
+    <StackPanel Spacing="4">
+      <DockPanel>
+        <TextBlock Classes="field-label" DockPanel.Dock="Left" Text="Opacity"
+                   VerticalAlignment="Center" />
+        <TextBlock Classes="field-label" DockPanel.Dock="Right"
+                   VerticalAlignment="Center" HorizontalAlignment="Right"
+                   Text="{Binding OpacityValueText}" />
+      </DockPanel>
+      <Slider Minimum="0.1" Maximum="1.0"
+              TickFrequency="0.05" IsSnapToTickEnabled="True"
+              Value="{Binding Opacity}" />
+    </StackPanel>
+
+    <StackPanel Spacing="4">
+      <TextBlock Classes="field-label" Text="Opacity Hotkey" />
+      <controls:HotkeyTextBox Hotkey="{Binding OpacityHotkey, Mode=TwoWay}" />
+    </StackPanel>
+
+    <StackPanel Spacing="4">
+      <TextBlock Classes="field-label" Text="No-Focus Mode" />
+      <controls:HotkeyTextBox Hotkey="{Binding NoFocusHotkey, Mode=TwoWay}" />
+      <TextBlock Classes="field-hint"
+                 Text="Prevents this window from stealing focus when clicked, keeping your browser active" />
+    </StackPanel>
+  </StackPanel>
+</UserControl>
