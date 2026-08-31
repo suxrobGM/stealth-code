@@ -37,7 +37,7 @@
       </ComboBox>
 
       <TextBlock Classes="field-hint"
-                 Text="Downloaded once into your user folder rather than bundled with the app. Applies on the next launch, or straight away if nothing has been transcribed yet this session. Falls back to the CPU if it cannot load." />
+                 Text="GPU packs download once on demand and apply on the next launch. Falls back to the CPU if one cannot load." />
 
       <TextBlock Classes="status-text" Text="{Binding GpuPackStatusText}"
                  IsVisible="{Binding GpuPackStatusText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
