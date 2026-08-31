@@ -2,7 +2,7 @@
 
 All notable changes to Stealth Code will be documented in this file.
 
-## [Unreleased]
+## [1.2.0] - 2026-08-30
 
 ### Fixes
 
