@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:StealthCode.ViewModels.Settings"
              xmlns:controls="using:StealthCode.Controls"
+             xmlns:capture="using:StealthCode.ScreenCapture.Models"
              x:Class="StealthCode.Views.Settings.CaptureSection"
              x:DataType="vm:CaptureSettingsViewModel">
 
@@ -10,10 +11,12 @@
 
     <StackPanel Spacing="4">
       <TextBlock Classes="field-label" Text="Mode" />
-      <ComboBox Classes="form-input" SelectedIndex="{Binding SelectedModeIndex}">
-        <ComboBoxItem Content="Full Screen" />
-        <ComboBoxItem Content="Region" />
-        <ComboBoxItem Content="Window" />
+      <ComboBox Classes="form-input"
+                SelectedValue="{Binding SelectedMode}"
+                SelectedValueBinding="{Binding Tag, x:DataType=ComboBoxItem}">
+        <ComboBoxItem Content="Full Screen" Tag="{x:Static capture:CaptureMode.FullScreen}" />
+        <ComboBoxItem Content="Region" Tag="{x:Static capture:CaptureMode.Region}" />
+        <ComboBoxItem Content="Window" Tag="{x:Static capture:CaptureMode.Window}" />
       </ComboBox>
     </StackPanel>
 

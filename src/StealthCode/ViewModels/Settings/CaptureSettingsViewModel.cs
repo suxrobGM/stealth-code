@@ -17,7 +17,7 @@ public sealed partial class CaptureSettingsViewModel(
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsRegionMode))]
     [NotifyPropertyChangedFor(nameof(IsWindowMode))]
-    public partial int SelectedModeIndex { get; set; }
+    public partial CaptureMode SelectedMode { get; set; }
 
     [ObservableProperty]
     public partial string RegionDisplayText { get; set; } = "";
@@ -34,9 +34,9 @@ public sealed partial class CaptureSettingsViewModel(
     [ObservableProperty]
     public partial string SystemPrompt { get; set; } = "";
 
-    public bool IsRegionMode => (CaptureMode)SelectedModeIndex == CaptureMode.Region;
+    public bool IsRegionMode => SelectedMode == CaptureMode.Region;
 
-    public bool IsWindowMode => (CaptureMode)SelectedModeIndex == CaptureMode.Window;
+    public bool IsWindowMode => SelectedMode == CaptureMode.Window;
 
     public override void Unload()
     {
@@ -68,7 +68,7 @@ public sealed partial class CaptureSettingsViewModel(
     {
         var capture = SettingsService.Settings.Capture;
 
-        SelectedModeIndex = (int)capture.Mode;
+        SelectedMode = capture.Mode;
         RegionDisplayText = capture is { RegionWidth: > 0, RegionHeight: > 0 }
             ? FormatRegion(capture.RegionX, capture.RegionY, capture.RegionWidth, capture.RegionHeight)
             : "";
@@ -95,9 +95,9 @@ public sealed partial class CaptureSettingsViewModel(
     [RelayCommand]
     private void ResetPrompt() => SystemPrompt = providerRegistry.GetActiveProvider().DefaultSystemPrompt;
 
-    partial void OnSelectedModeIndexChanged(int value)
+    partial void OnSelectedModeChanged(CaptureMode value)
     {
-        SettingsService.Settings.Capture.Mode = (CaptureMode)value;
+        SettingsService.Settings.Capture.Mode = value;
         Save();
     }
 

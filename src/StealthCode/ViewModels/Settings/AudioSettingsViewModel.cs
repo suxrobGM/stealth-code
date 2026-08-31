@@ -40,10 +40,10 @@ public sealed partial class AudioSettingsViewModel : SettingsSectionViewModel,
     [ObservableProperty]
     public partial string DownloadModelButtonText { get; set; } = "Download Model";
 
-    /// <summary>Selected <see cref="GpuBackend"/>, as an index into the view's list.</summary>
+    /// <summary>Runtime Whisper should use, whether or not its pack is installed.</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasGpuPack))]
-    public partial int SelectedGpuBackendIndex { get; set; }
+    public partial GpuBackend SelectedGpuBackend { get; set; }
 
     [ObservableProperty]
     public partial string? GpuPackStatusText { get; set; }
@@ -57,7 +57,7 @@ public sealed partial class AudioSettingsViewModel : SettingsSectionViewModel,
     /// <summary>Whether the selected backend needs a pack, and so has buttons to show.</summary>
     public bool HasGpuPack => SelectedPack is not null;
 
-    private GpuPack? SelectedPack => GpuPackCatalog.Resolve((GpuBackend)SelectedGpuBackendIndex);
+    private GpuPack? SelectedPack => GpuPackCatalog.Resolve(SelectedGpuBackend);
 
     public void Receive(ModelDownloadCompletedMessage message)
     {
@@ -72,7 +72,7 @@ public sealed partial class AudioSettingsViewModel : SettingsSectionViewModel,
         Hotkey = audio.Hotkey;
         ModelPath = audio.ModelPath;
         SystemPrompt = audio.SystemPrompt;
-        SelectedGpuBackendIndex = (int)audio.GpuBackend;
+        SelectedGpuBackend = audio.GpuBackend;
         DownloadModelButtonText = ModelDownloadService.ModelExists(audio.ModelPath)
             ? "Model ready"
             : "Download Model";
@@ -177,14 +177,14 @@ public sealed partial class AudioSettingsViewModel : SettingsSectionViewModel,
         Save();
     }
 
-    partial void OnSelectedGpuBackendIndexChanged(int value)
+    partial void OnSelectedGpuBackendChanged(GpuBackend value)
     {
         if (IsLoading)
         {
             return;
         }
 
-        SettingsService.Settings.Audio.GpuBackend = (GpuBackend)value;
+        SettingsService.Settings.Audio.GpuBackend = value;
         Save();
         GpuPackStatusText = RefreshGpuPackButton();
     }
