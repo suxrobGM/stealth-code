@@ -2,6 +2,12 @@
 
 All notable changes to Stealth Code will be documented in this file.
 
+## [1.2.1] - 2026-08-31
+
+### Improvements
+
+- Shortened the GPU backend hint in Settings > Audio so it fits the panel in two lines
+
 ## [1.2.0] - 2026-08-30
 
 ### Fixes
