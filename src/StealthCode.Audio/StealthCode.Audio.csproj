@@ -4,12 +4,26 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- Keep this version in sync with GpuPackCatalog; the verification script checks both. -->
+    <WhisperVersion>1.9.1</WhisperVersion>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.11" />
-    <PackageReference Include="Whisper.net" Version="1.9.1" />
-    <PackageReference Include="Whisper.net.Runtime" Version="1.9.1" />
-    <PackageReference Include="Whisper.net.Runtime.Cuda.Windows" Version="1.9.1" />
+    <PackageReference Include="Whisper.net" Version="$(WhisperVersion)" />
+    <PackageReference Include="Whisper.net.Runtime" Version="$(WhisperVersion)" />
+    <!-- Exclude Metal build assets so the macOS shader stays out of the Windows publish. -->
+    <PackageReference Include="Whisper.net.Runtime.Metal" Version="$(WhisperVersion)" ExcludeAssets="build" />
   </ItemGroup>
+
+  <!-- Remove native files for platforms other than win-x64 from the publish. -->
+  <Target Name="StripForeignWhisperNatives" BeforeTargets="AssignTargetPaths">
+    <ItemGroup>
+      <_WhisperForeignNative Include="@(None)"
+                             Condition="'%(None.TargetPath)' != ''
+                                        And $([System.String]::new('%(None.TargetPath)').StartsWith('runtimes/'))
+                                        And !$([System.String]::new('%(None.TargetPath)').StartsWith('runtimes/win-x64/'))" />
+      <None Remove="@(_WhisperForeignNative)" />
+    </ItemGroup>
+  </Target>
 </Project>

@@ -1,4 +1,5 @@
 using System.Text;
+using StealthCode.Audio.Models;
 using StealthCode.Audio.Services;
 using StealthCode.Terminal;
 
@@ -6,10 +7,7 @@ namespace StealthCode.Services;
 
 public sealed record AudioStateChangedEventArgs(bool IsRecording, string Status);
 
-/// <summary>
-///     Orchestrates audio capture, transcription, and injection into the terminal.
-///     Toggle pattern: the first call starts recording, the second call stops → transcribes → injects.
-/// </summary>
+/// <summary>Captures audio, transcribes it, and injects the result into the terminal.</summary>
 public sealed class AudioInjectorService(
     SettingsService settingsService,
     AudioCaptureService audioCaptureService,
@@ -20,15 +18,10 @@ public sealed class AudioInjectorService(
 
     public string? LastError => audioCaptureService.LastError;
 
-    /// <summary>
-    ///    Raised when audio recording state changes such as start, stop, or status updates (e.g. "Transcribing audio...").
-    /// </summary>
+    /// <summary>Raised when recording or transcription status changes.</summary>
     public event Action<AudioStateChangedEventArgs>? AudioStateChanged;
 
-    /// <summary>
-    ///     Toggles audio recording. Returns true if recording started, false if stopped.
-    ///     On stop, transcription and injection happen on a background thread.
-    /// </summary>
+    /// <summary>Toggles recording. Processing after stop runs in the background.</summary>
     public bool Toggle()
     {
         if (!audioCaptureService.IsRecording)
@@ -42,7 +35,7 @@ public sealed class AudioInjectorService(
             return false;
         }
 
-        // Stop recording and process on background thread
+        // Stop and process in the background.
         AudioStateChanged?.Invoke(new AudioStateChangedEventArgs(false, "Saving audio..."));
         var wavPath = audioCaptureService.StopCapture();
 
@@ -57,23 +50,24 @@ public sealed class AudioInjectorService(
         Task.Run(async () =>
         {
             AudioStateChanged?.Invoke(new AudioStateChangedEventArgs(false, "Transcribing audio..."));
-            var useGpuBefore = audio.UseGpu;
-            var transcript = await transcriptionService.TranscribeAsync(wavPath, audio);
+            var result = await transcriptionService.TranscribeAsync(wavPath, audio);
 
-            // Transcribing clears UseGpu when the graphics card closed the app last run and was skipped.
-            if (audio.UseGpu != useGpuBefore)
+            // A GPU runtime that failed to load fell back to the CPU; make that stick.
+            if (result.GpuFellBack)
             {
+                audio.GpuBackend = GpuBackend.None;
                 settingsService.Save();
             }
 
-            if (string.IsNullOrWhiteSpace(transcript))
+            // Only write successful transcripts to the terminal.
+            if (!result.Ok)
             {
-                AudioStateChanged?.Invoke(new AudioStateChangedEventArgs(false, ""));
+                AudioStateChanged?.Invoke(new AudioStateChangedEventArgs(false, result.Error ?? ""));
                 return;
             }
 
             var transcriptPath = Path.ChangeExtension(wavPath, ".txt");
-            await File.WriteAllTextAsync(transcriptPath, transcript);
+            await File.WriteAllTextAsync(transcriptPath, result.Text);
 
             var prompt = $"{audio.SystemPrompt.Trim()} See the transcription file: {transcriptPath.Replace('\\', '/')}";
             pty.Write(Encoding.UTF8.GetBytes(prompt));

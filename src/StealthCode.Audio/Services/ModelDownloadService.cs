@@ -36,28 +36,9 @@ public sealed class ModelDownloadService : IDisposable
             }
 
             var url = $"{BaseUrl}/{modelFileName}";
-            using var response = await http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, activeCts.Token);
-            response.EnsureSuccessStatusCode();
-
-            var totalBytes = response.Content.Headers.ContentLength ?? -1;
             var tempPath = targetPath + ".download";
 
-            await using var contentStream = await response.Content.ReadAsStreamAsync(activeCts.Token);
-            await using var fileStream = File.Create(tempPath);
-
-            var buffer = new byte[81920];
-            long bytesDownloaded = 0;
-            int bytesRead;
-
-            while ((bytesRead = await contentStream.ReadAsync(buffer, activeCts.Token)) > 0)
-            {
-                await fileStream.WriteAsync(buffer.AsMemory(0, bytesRead), activeCts.Token);
-                bytesDownloaded += bytesRead;
-                DownloadProgress?.Invoke(bytesDownloaded, totalBytes);
-            }
-
-            await fileStream.FlushAsync(activeCts.Token);
-            fileStream.Close();
+            await FileDownloader.DownloadAsync(http, url, tempPath, DownloadProgress, null, activeCts.Token);
 
             File.Move(tempPath, targetPath, true);
             return true;

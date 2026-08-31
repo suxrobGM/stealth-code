@@ -90,10 +90,31 @@ Stealth Code records system audio (what you hear through your speakers/headphone
    - Parsing IEEE float32 or int16 samples
    - Downmixing stereo/multichannel to mono by averaging channels
    - Resampling to 16kHz via linear interpolation
-3. **Whisper transcription** - [Whisper.net](https://github.com/sandrohanea/whisper.net) (a C# wrapper around whisper.cpp) runs the `ggml-base` model locally on the CPU backend. Whisper.net's default order tries CUDA first and falls through on failure, but a failed CUDA load aborts the process rather than falling back, so `WhisperRuntime` pins the order to a single backend. CUDA is opt-in under Settings > Audio, guarded by a sentinel that disarms it if a load aborts.
+3. **Whisper transcription** - [Whisper.net](https://github.com/sandrohanea/whisper.net) (a C# wrapper around whisper.cpp) runs the `ggml-base` model locally. Whisper.net's default order tries each backend in turn, but a failed GPU load aborts the process rather than falling back, so `WhisperRuntime` offers exactly one backend and decides itself. Only the CPU build ships with the app; Vulkan and CUDA are **acceleration packs** downloaded on demand under Settings > Audio (see below). A pack that is missing, incomplete, or that aborted a previous load falls back to the CPU with a note explaining why.
 4. **Inject** - The transcription text is wrapped with the configured system prompt and sent to the PTY, just like screenshot injection.
 
 **Usage is toggle-based:** press the hotkey once to start recording, press again to stop. The transcription runs asynchronously, and results appear in the terminal once ready.
+
+### GPU acceleration packs
+
+`ggml-cuda-whisper.dll` is 147 MB on its own, which made the published executable 160 MB for every user whether or not they owned an NVIDIA card. The GPU natives are downloaded on demand instead, the same way the Whisper model already was, which returns the executable to roughly 19 MB.
+
+| Backend | Download | Covers |
+| --- | --- | --- |
+| CPU | ships with the app | everyone |
+| Vulkan | 35 MB | any recent GPU, including AMD and Intel |
+| CUDA 13 | 136 MB | NVIDIA, driver 13.x |
+| CUDA 12 | 238 MB | NVIDIA, driver 12.x or pre-Turing cards |
+
+Packs come from nuget.org, which serves published packages straight from a URL and never alters or deletes one, so there is nothing to host. A `.nupkg` is an ordinary zip; `GpuPackService` streams it, checks it against the SHA-512 NuGet publishes for that file, and unpacks `build/win-x64/*.dll` into `%APPDATA%/StealthCode/gpu/{segment}-{whisperVersion}/runtimes/{segment}/win-x64/`. `scripts/verify-gpu-packs.ps1` re-checks the pinned hashes against NuGet without downloading, and `publish.ps1` runs it as a gate.
+
+Three things to know before touching this code:
+
+- **`RuntimeOptions.LibraryPath` is a file path, not a directory.** Whisper.net runs it through `Path.GetDirectoryName`, so a root without a trailing separator loses its last segment and the search silently lands one level too high. `AudioPaths.PackLibraryPath` appends the separator deliberately.
+- **Whisper.net will not fall back to the CPU for us.** With a single-entry `RuntimeLibraryOrder` and no pack on disk it throws rather than trying anything else, and offering one entry also switches off its own CUDA compatibility check. The per-backend marker files are the only protection against a pack that kills the process while loading.
+- **Pack folders are named for the Whisper version**, so a version bump looks for a folder that does not exist yet instead of loading mismatched natives, and installing never deletes DLLs the running process has open.
+
+CUDA has two incompatible builds and the user picks between them; there is no auto-detection, because probing the driver reliably meant a few hundred lines of interop to save one dropdown choice.
 
 ## Window Opacity
 

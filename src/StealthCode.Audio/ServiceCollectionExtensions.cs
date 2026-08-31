@@ -10,6 +10,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<AudioCaptureService>();
         services.AddSingleton<TranscriptionService>();
         services.AddSingleton<ModelDownloadService>();
+        services.AddSingleton<GpuPackService>();
         return services;
     }
 }

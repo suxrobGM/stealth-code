@@ -10,12 +10,16 @@ All notable changes to Stealth Code will be documented in this file.
 - Whisper no longer kills the app when CUDA fails to load - a failed load aborts the process instead of falling back, so the backend is pinned to a single runtime, CPU by default
 - Switching CLI providers no longer drops you into the fallback shell - the killed process reported its exit after the replacement had started and was read as a crash. PTY processes are now generation-tagged
 - Whisper load failures report the underlying error instead of a bare "Failed to load Whisper model"
+- CUDA now works on machines with a 12.x driver - Whisper.net 1.9.1 splits CUDA into two incompatible runtimes and the backend was pinned to the 13.x one, so 12.x machines hit the aborting load the sentinel exists to survive. Both are now offered
+- Transcription errors no longer reach the CLI as if they were speech - a failure was written to the transcript file and announced as something to go and read. Transcription now returns a result the caller can tell apart from a transcript
 
 ### Improvements
 
 - Terminal switched from winpty to ConPTY, restoring colour runs, wide glyphs, and the alternate screen buffer; winpty natives dropped from the published payload
 - PTY children get a repaired `PATH` (inherited entries plus machine and user registry entries), so a stripped environment cannot produce a session that fails to find the CLI
-- Optional CUDA backend for Whisper under Settings > Audio, guarded by a sentinel that disarms it if a load aborts
+- Published executable is 19 MB, down from 160 MB. The CUDA runtime that made up 92% of it is no longer bundled; GPU support is now a pack downloaded on demand from nuget.org, hash-checked, and stored under `%APPDATA%`
+- Settings > Audio picks the Whisper backend: CPU, Vulkan (35 MB, any GPU including AMD and Intel), CUDA 13 (136 MB), or CUDA 12 (238 MB)
+- Dropped ~12 MB of natives that could never load on Windows x64 - Whisper.net ships every platform's binaries, and the Linux `.so` files were being read as the Somali locale and packed into a satellite assembly
 - Updated Whisper.net 1.9.0 → 1.9.1, Microsoft.Extensions.DependencyInjection 10.0.5 → 10.0.11
 - Migrated to Avalonia 12.1.1 (from 11.3.13) and Avalonia.Controls.WebView 12.1.0. `Avalonia.Diagnostics` has no v12 release and is replaced by `AvaloniaUI.DiagnosticsSupport`
 - Terminal assets are no longer unpacked to an `assets/` folder beside the executable - xterm's stylesheet and scripts are inlined into a single document handed to the WebView from memory

@@ -17,6 +17,14 @@ $EmbeddedDir = "..\src\StealthCode.Launcher\Embedded"
 $TempOutput = "..\publish\temp"
 $FinalOutput = Join-Path $OutputDir $Runtime
 
+# Step 0: Verify GPU pack versions and hashes.
+Write-Host "Step 0: Verifying GPU pack constants..." -ForegroundColor Yellow
+& (Join-Path $PSScriptRoot "verify-gpu-packs.ps1")
+if ($LASTEXITCODE -ne 0) {
+    Write-Error "GPU pack constants are out of date"
+    exit 1
+}
+
 # Clean output directories
 Write-Host "Cleaning output directories..." -ForegroundColor Cyan
 if (Test-Path $FinalOutput) {
@@ -105,5 +113,8 @@ if (Test-Path $TempOutput) {
     Write-Host "Cleaned up temporary files." -ForegroundColor Gray
 }
 
+$FinalExe = Join-Path $FinalOutput "stealthcode.exe"
+$FinalSizeMB = [math]::Round((Get-Item $FinalExe).Length / 1MB, 1)
+
 Write-Host ""
-Write-Host "Done: $FinalOutput\stealthcode.exe" -ForegroundColor Green
+Write-Host "Done: $FinalExe ($FinalSizeMB MB)" -ForegroundColor Green
