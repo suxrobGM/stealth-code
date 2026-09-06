@@ -1,0 +1,59 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+  <Style Selector="TextBox.form-input, ComboBox.form-input, NumericUpDown.form-input, Button.form-button">
+    <Setter Property="FontSize" Value="{StaticResource FontSizeXs}" />
+    <Setter Property="Background" Value="{StaticResource ControlBg}" />
+    <Setter Property="Foreground" Value="{StaticResource PrimaryFg}" />
+    <Setter Property="BorderThickness" Value="0" />
+  </Style>
+
+  <!-- Single-line inputs; a TextBox grows to fit its content instead -->
+  <Style Selector="ComboBox.form-input, NumericUpDown.form-input, Button.form-button">
+    <Setter Property="Height" Value="28" />
+  </Style>
+
+  <!-- Inline form button (download, reset, pick a target) -->
+  <Style Selector="Button.form-button">
+    <Setter Property="Foreground" Value="{StaticResource SecondaryFg}" />
+    <Setter Property="HorizontalAlignment" Value="Left" />
+  </Style>
+
+  <Style Selector="Button.form-button.compact">
+    <Setter Property="Height" Value="26" />
+  </Style>
+
+  <Style Selector="Button.form-button:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{StaticResource HoverBg}" />
+    <Setter Property="TextElement.Foreground" Value="{StaticResource PrimaryFg}" />
+  </Style>
+
+  <Style Selector="Button.form-button:pressed /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{StaticResource PressedBg}" />
+  </Style>
+
+  <Style Selector="Button.form-button:disabled /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{StaticResource ControlBg}" />
+    <Setter Property="TextElement.Foreground" Value="{StaticResource MutedFg}" />
+  </Style>
+
+  <!-- Focus. The Fluent default ring is blue. -->
+  <Style Selector="TextBox.form-input:focus /template/ Border#PART_BorderElement">
+    <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+  </Style>
+
+  <Style Selector="ComboBox.form-input:focus /template/ Border#Background">
+    <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+  </Style>
+
+  <Style Selector="Slider">
+    <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+  </Style>
+
+  <Style Selector="Slider /template/ Thumb">
+    <Setter Property="Background" Value="{StaticResource AccentBrush}" />
+  </Style>
+
+</Styles>

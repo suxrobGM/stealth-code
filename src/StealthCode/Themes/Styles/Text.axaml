@@ -1,0 +1,77 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+  <Style Selector="TextBlock.section-header">
+    <Setter Property="FontSize" Value="{StaticResource FontSizeXs}" />
+    <Setter Property="Foreground" Value="{StaticResource MutedFg}" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+
+  <Style Selector="TextBlock.field-label">
+    <Setter Property="FontSize" Value="{StaticResource FontSizeXs}" />
+    <Setter Property="Foreground" Value="{StaticResource SecondaryFg}" />
+  </Style>
+
+  <Style Selector="TextBlock.field-hint">
+    <Setter Property="FontSize" Value="{StaticResource FontSizeXs}" />
+    <Setter Property="Foreground" Value="{StaticResource MutedFg}" />
+    <Setter Property="TextWrapping" Value="Wrap" />
+  </Style>
+
+  <Style Selector="TextBlock.app-name">
+    <Setter Property="FontSize" Value="{StaticResource FontSizeXs}" />
+    <Setter Property="FontWeight" Value="Bold" />
+    <Setter Property="Foreground" Value="{StaticResource TertiaryFg}" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+
+  <!-- Lamp beside a title bar chip -->
+  <Style Selector="Ellipse.chip-dot">
+    <Setter Property="Width" Value="5" />
+    <Setter Property="Height" Value="5" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+
+  <!-- Title of a dialog or a side panel -->
+  <Style Selector="TextBlock.dialog-title">
+    <Setter Property="FontSize" Value="{StaticResource FontSizeMd}" />
+    <Setter Property="Foreground" Value="{StaticResource PrimaryFg}" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+
+  <!-- Status line; severity is a class -->
+  <Style Selector="TextBlock.status">
+    <Setter Property="FontSize" Value="{StaticResource FontSizeXs}" />
+    <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+    <Setter Property="TextWrapping" Value="Wrap" />
+  </Style>
+
+  <Style Selector="TextBlock.status.warning">
+    <Setter Property="Foreground" Value="{StaticResource WarningFg}" />
+  </Style>
+
+  <Style Selector="TextBlock.status.danger">
+    <Setter Property="Foreground" Value="{StaticResource DangerBrush}" />
+  </Style>
+
+  <!-- Text in the title bar and action bar -->
+  <Style Selector="TextBlock.bar-text">
+    <Setter Property="FontSize" Value="{StaticResource FontSizeXs}" />
+    <Setter Property="Foreground" Value="{StaticResource MutedFg}" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+
+  <Style Selector="TextBlock.bar-text.accent">
+    <Setter Property="Foreground" Value="{StaticResource AccentDimBrush}" />
+  </Style>
+
+  <Style Selector="TextBlock.bar-text.warning">
+    <Setter Property="Foreground" Value="{StaticResource WarningDimBrush}" />
+  </Style>
+
+  <Style Selector="TextBlock.bar-text.danger">
+    <Setter Property="Foreground" Value="{StaticResource DangerBrush}" />
+  </Style>
+
+</Styles>

@@ -1,0 +1,131 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+  <Style Selector="Button.primary">
+    <Setter Property="FontSize" Value="{StaticResource FontSizeXs}" />
+    <Setter Property="Height" Value="28" />
+    <Setter Property="MinWidth" Value="80" />
+    <Setter Property="Background" Value="{StaticResource AccentBrush}" />
+    <Setter Property="Foreground" Value="{StaticResource OnAccentFg}" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="CornerRadius" Value="{StaticResource CornerRadiusSm}" />
+  </Style>
+
+  <Style Selector="Button.secondary">
+    <Setter Property="FontSize" Value="{StaticResource FontSizeXs}" />
+    <Setter Property="Height" Value="28" />
+    <Setter Property="MinWidth" Value="80" />
+    <Setter Property="Background" Value="{StaticResource ControlBg}" />
+    <Setter Property="Foreground" Value="{StaticResource SecondaryFg}" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="CornerRadius" Value="{StaticResource CornerRadiusSm}" />
+  </Style>
+
+  <!-- Action bar button; the label lives in the tooltip -->
+  <Style Selector="Button.action">
+    <Setter Property="Width" Value="30" />
+    <Setter Property="Height" Value="24" />
+    <Setter Property="FontSize" Value="{StaticResource FontSizeSm}" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="Foreground" Value="{StaticResource SecondaryFg}" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="CornerRadius" Value="{StaticResource CornerRadiusSm}" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+  </Style>
+
+  <!-- The button is its own state indicator -->
+  <Style Selector="Button.action.active">
+    <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+  </Style>
+
+  <Style Selector="Button.action:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{StaticResource HoverBg}" />
+  </Style>
+
+  <Style Selector="Button.action:pressed /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{StaticResource PressedBg}" />
+  </Style>
+
+  <Style Selector="Button.action:disabled /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="TextElement.Foreground" Value="{StaticResource DividerBrush}" />
+  </Style>
+
+  <!-- Settings tab -->
+  <Style Selector="Button.tab">
+    <Setter Property="FontSize" Value="{StaticResource FontSizeXs}" />
+    <Setter Property="Height" Value="28" />
+    <Setter Property="Padding" Value="14,0" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="Foreground" Value="{StaticResource MutedFg}" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="CornerRadius" Value="{StaticResource CornerRadiusSm}" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+  </Style>
+
+  <Style Selector="Button.tab.selected">
+    <Setter Property="Background" Value="{StaticResource ControlBg}" />
+    <Setter Property="Foreground" Value="{StaticResource PrimaryFg}" />
+  </Style>
+
+  <Style Selector="Button.tab:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="TextElement.Foreground" Value="{StaticResource PrimaryFg}" />
+  </Style>
+
+  <!-- Opacity preset chip -->
+  <Style Selector="Button.chip">
+    <Setter Property="FontSize" Value="{StaticResource FontSizeXs}" />
+    <Setter Property="Height" Value="28" />
+    <Setter Property="MinWidth" Value="52" />
+    <Setter Property="Padding" Value="10,0" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+    <Setter Property="Background" Value="{StaticResource ControlBg}" />
+    <Setter Property="Foreground" Value="{StaticResource SecondaryFg}" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="CornerRadius" Value="{StaticResource CornerRadiusSm}" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+  </Style>
+
+  <Style Selector="Button.chip.selected">
+    <Setter Property="Background" Value="{StaticResource AccentBrush}" />
+    <Setter Property="Foreground" Value="{StaticResource OnAccentFg}" />
+  </Style>
+
+  <Style Selector="Button.chip:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{StaticResource HoverBg}" />
+  </Style>
+
+  <!-- Row that expands to reveal what it summarises -->
+  <Style Selector="Button.disclosure">
+    <Setter Property="FontSize" Value="{StaticResource FontSizeXs}" />
+    <Setter Property="MinHeight" Value="28" />
+    <Setter Property="Padding" Value="10,6" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+    <Setter Property="HorizontalAlignment" Value="Stretch" />
+    <Setter Property="HorizontalContentAlignment" Value="Left" />
+    <Setter Property="Background" Value="{StaticResource ControlBg}" />
+    <Setter Property="Foreground" Value="{StaticResource SecondaryFg}" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="CornerRadius" Value="{StaticResource CornerRadiusSm}" />
+  </Style>
+
+  <Style Selector="Button.disclosure:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{StaticResource HoverBg}" />
+    <Setter Property="TextElement.Foreground" Value="{StaticResource PrimaryFg}" />
+  </Style>
+
+  <!-- Borderless text button that reads as a link -->
+  <Style Selector="Button.link">
+    <Setter Property="FontSize" Value="{StaticResource FontSizeXs}" />
+    <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="MinHeight" Value="0" />
+    <Setter Property="Cursor" Value="Hand" />
+  </Style>
+
+</Styles>

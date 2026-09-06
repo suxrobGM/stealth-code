@@ -5,20 +5,18 @@
         WindowDecorations="None"
         WindowState="FullScreen"
         Topmost="True"
-        Background="#01000000"
+        Background="{StaticResource OverlayHitBrush}"
         Cursor="Cross">
 
   <Panel>
     <!-- Dim overlay -->
-    <Border Background="#40000000" />
+    <Border Classes="overlay-scrim" />
 
     <!-- Selection canvas -->
     <Canvas x:Name="SelectionCanvas" />
 
     <!-- Instructions -->
-    <TextBlock Text="Click and drag to select a region. Press Escape to cancel."
-               FontSize="14" Foreground="#CCFFFFFF"
-               HorizontalAlignment="Center" VerticalAlignment="Top"
-               Margin="0,40,0,0" />
+    <TextBlock Classes="overlay-hint"
+               Text="Click and drag to select a region. Press Escape to cancel." />
   </Panel>
 </Window>

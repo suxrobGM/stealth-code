@@ -1,0 +1,18 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+  <!-- Window chrome -->
+  <x:String x:Key="IconPin">&#x2299;</x:String>
+  <x:String x:Key="IconSettings">&#x2261;</x:String>
+  <x:String x:Key="IconMinimize">&#x2500;</x:String>
+  <x:String x:Key="IconMaximize">&#x25A1;</x:String>
+  <x:String x:Key="IconClose">&#x00D7;</x:String>
+
+  <!-- Actions -->
+  <x:String x:Key="IconCapture">&#x25C9;</x:String>
+  <x:String x:Key="IconMulti">&#x25A3;</x:String>
+  <x:String x:Key="IconListen">&#x23FA;</x:String>
+  <x:String x:Key="IconOpacity">&#x25D0;</x:String>
+  <x:String x:Key="IconNoFocus">&#x25CC;</x:String>
+
+</ResourceDictionary>

@@ -3,11 +3,7 @@
              x:Class="StealthCode.Controls.HotkeyTextBox">
 
   <StackPanel Spacing="4">
-    <TextBox x:Name="Input" FontSize="11" Height="28"
-             Background="{StaticResource ControlBg}"
-             Foreground="{StaticResource PrimaryFg}"
-             BorderThickness="0" />
-    <TextBlock x:Name="ErrorText" FontSize="10" Foreground="#E05252"
-               IsVisible="False" />
+    <TextBox x:Name="Input" Classes="form-input" Height="28" />
+    <TextBlock x:Name="ErrorText" Classes="status warning" IsVisible="False" />
   </StackPanel>
 </UserControl>

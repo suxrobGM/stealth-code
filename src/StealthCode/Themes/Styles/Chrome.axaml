@@ -1,0 +1,46 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+  <Style Selector="Button.chrome">
+    <Setter Property="Width" Value="36" />
+    <Setter Property="Height" Value="28" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="Foreground" Value="{StaticResource SecondaryFg}" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="CornerRadius" Value="0" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+    <Setter Property="Padding" Value="0" />
+  </Style>
+
+  <Style Selector="Button.chrome.pinned">
+    <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+  </Style>
+
+  <Style Selector="Button.chrome:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{StaticResource HoverBg}" />
+    <Setter Property="TextElement.Foreground" Value="{StaticResource PrimaryFg}" />
+  </Style>
+
+  <Style Selector="Button.chrome:pressed /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{StaticResource PressedBg}" />
+  </Style>
+
+  <!-- Only the close button turns red; the rest share the neutral hover above -->
+  <Style Selector="Button.chrome.close:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{StaticResource DangerBrush}" />
+    <Setter Property="TextElement.Foreground" Value="{StaticResource OnAccentFg}" />
+  </Style>
+
+  <!-- Chromeless combo that sits inside the title bar drag region -->
+  <Style Selector="ComboBox.inline">
+    <Setter Property="FontSize" Value="{StaticResource FontSizeXs}" />
+    <Setter Property="Height" Value="22" />
+    <Setter Property="MinWidth" Value="100" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="Foreground" Value="{StaticResource TertiaryFg}" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+
+</Styles>

@@ -1,5 +1,5 @@
 <ResourceDictionary xmlns="https://github.com/avaloniaui"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
   <!-- Background tones -->
   <SolidColorBrush x:Key="WindowBg" Color="#1A1A1A" />
@@ -8,14 +8,41 @@
   <SolidColorBrush x:Key="ControlBg" Color="#2D2D2D" />
   <SolidColorBrush x:Key="DividerBrush" Color="#333333" />
 
-  <!-- Foreground tones -->
-  <SolidColorBrush x:Key="MutedFg" Color="#555555" />
-  <SolidColorBrush x:Key="SecondaryFg" Color="#808080" />
+  <!-- Interaction tones -->
+  <SolidColorBrush x:Key="HoverBg" Color="#2F2F2F" />
+  <SolidColorBrush x:Key="PressedBg" Color="#383838" />
+
+  <!-- Foreground tones. MutedFg and SecondaryFg are held at 4.5:1 against WindowBg. -->
+  <SolidColorBrush x:Key="MutedFg" Color="#7A828C" />
+  <SolidColorBrush x:Key="SecondaryFg" Color="#8B8B8B" />
   <SolidColorBrush x:Key="TertiaryFg" Color="#999999" />
   <SolidColorBrush x:Key="PrimaryFg" Color="#D4D4D4" />
 
-  <!-- Accent -->
+  <!-- Status. Accent doubles as the success tone. -->
   <SolidColorBrush x:Key="AccentBrush" Color="#10B981" />
   <SolidColorBrush x:Key="WarningFg" Color="#F59E0B" />
+  <SolidColorBrush x:Key="DangerBrush" Color="#EF4444" />
+
+  <!-- Text drawn on top of a filled accent or danger surface -->
+  <SolidColorBrush x:Key="OnAccentFg" Color="#FFFFFF" />
+
+  <!-- Dimmed accents for title bar chips -->
+  <SolidColorBrush x:Key="AccentDimBrush" Color="#0E7C5A" />
+  <SolidColorBrush x:Key="WarningDimBrush" Color="#A9700A" />
+
+  <!-- Region selection overlay -->
+  <SolidColorBrush x:Key="OverlayHitBrush" Color="#01000000" />
+  <SolidColorBrush x:Key="OverlayScrimBrush" Color="#40000000" />
+  <SolidColorBrush x:Key="OverlayFg" Color="#CCFFFFFF" />
+  <SolidColorBrush x:Key="SelectionStrokeBrush" Color="#10B981" />
+  <SolidColorBrush x:Key="SelectionFillBrush" Color="#2010B981" />
+
+  <!-- Type scale -->
+  <x:Double x:Key="FontSizeXs">11</x:Double>
+  <x:Double x:Key="FontSizeSm">12</x:Double>
+  <x:Double x:Key="FontSizeMd">13</x:Double>
+  <x:Double x:Key="FontSizeLg">14</x:Double>
+
+  <CornerRadius x:Key="CornerRadiusSm">4</CornerRadius>
 
 </ResourceDictionary>

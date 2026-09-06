@@ -24,6 +24,10 @@ public partial class RegionSelectionWindow : Window
 
     public Task<(int X, int Y, int Width, int Height)?> GetSelectionAsync() => viewModel.ResultTask;
 
+    /// <summary>Reads a brush from Theme.axaml.</summary>
+    private static IBrush? ThemeBrush(string key) =>
+        Application.Current?.TryFindResource(key, out var value) == true ? value as IBrush : null;
+
     protected override void OnKeyDown(KeyEventArgs e)
     {
         if (e.Key == Key.Escape)
@@ -55,9 +59,9 @@ public partial class RegionSelectionWindow : Window
 
         selectionRect = new Rectangle
         {
-            Stroke = new SolidColorBrush(Color.Parse("#10B981")),
+            Stroke = ThemeBrush("SelectionStrokeBrush"),
             StrokeThickness = 2,
-            Fill = new SolidColorBrush(Color.Parse("#2010B981"))
+            Fill = ThemeBrush("SelectionFillBrush")
         };
 
         Canvas.SetLeft(selectionRect, startPoint.X);
