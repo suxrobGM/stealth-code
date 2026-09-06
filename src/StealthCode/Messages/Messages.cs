@@ -18,8 +18,8 @@ public sealed record HotkeyChangedMessage(string Name, string Hotkey);
 public sealed record RequestRegionSelectionMessage;
 public sealed record RequestWindowSelectionMessage;
 
-// MainWindowViewModel -> View: recording state changed
-public sealed record AudioRecordingChangedMessage(bool IsRecording);
+// MainWindowViewModel -> View: listening state changed
+public sealed record AudioRecordingChangedMessage(bool IsListening);
 
 // MainWindowViewModel -> View: no-focus mode changed
 public sealed record NoFocusChangedMessage(bool IsNoFocus);
@@ -30,6 +30,7 @@ public sealed record MultiCaptureChangedMessage(bool IsActive, int Count);
 // Settings panel <-> AudioViewModel: Whisper model download
 public sealed record ModelDownloadRequestedMessage(string ModelPath);
 public sealed record ModelDownloadCompletedMessage(bool Success);
+public sealed record AudioModelChangedMessage(string ModelPath);
 
 // Update notifications
 public sealed record UpdateAvailableMessage(bool Available);

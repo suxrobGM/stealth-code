@@ -15,7 +15,6 @@ public sealed class CaptureInjectorService(
     ScreenCaptureService screenCaptureService,
     PtyService pty)
 {
-    private static readonly byte[] Enter = "\r"u8.ToArray();
     private readonly List<string> pendingCaptures = [];
 
     public bool IsMultiCaptureActive => pendingCaptures.Count > 0;
@@ -53,8 +52,7 @@ public sealed class CaptureInjectorService(
                 $"{capture.SystemPrompt.Trim()} See the screenshot: {imagePath}"
         };
 
-        pty.Write(Encoding.UTF8.GetBytes(prompt));
-        Task.Delay(500).ContinueWith(_ => pty.Write(Enter));
+        _ = PromptInjector.SendAsync(pty, prompt);
     }
 
     /// <summary>
@@ -98,7 +96,6 @@ public sealed class CaptureInjectorService(
         pendingCaptures.Clear();
 
         var prompt = sb.ToString();
-        pty.Write(Encoding.UTF8.GetBytes(prompt));
-        Task.Delay(500).ContinueWith(_ => pty.Write(Enter));
+        _ = PromptInjector.SendAsync(pty, prompt);
     }
 }

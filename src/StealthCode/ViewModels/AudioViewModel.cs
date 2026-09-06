@@ -1,3 +1,4 @@
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using StealthCode.Audio.Services;
@@ -12,15 +13,20 @@ public sealed partial class AudioViewModel(
     SettingsService settingsService,
     HotkeyService hotkeyService,
     AudioInjectorService audioInjectorService,
-    ModelDownloadService modelDownloadService) : ViewModelBase, IRecipient<ModelDownloadRequestedMessage>
+    ModelDownloadService modelDownloadService) : ViewModelBase,
+    IRecipient<ModelDownloadRequestedMessage>, IRecipient<AudioModelChangedMessage>
 {
     private IntPtr hwnd;
+    private bool hotkeyRegistered;
 
     [ObservableProperty]
-    public partial bool IsRecording { get; set; }
+    public partial bool IsListening { get; set; }
 
     [ObservableProperty]
     public partial string HotkeyText { get; set; } = "\u23FA Ctrl+Shift+A";
+
+    [ObservableProperty]
+    public partial string TranscriptPreview { get; set; } = "";
 
     [ObservableProperty]
     public partial bool IsModelAvailable { get; set; }
@@ -64,6 +70,27 @@ public sealed partial class AudioViewModel(
         WeakReferenceMessenger.Default.Send(new ModelDownloadCompletedMessage(success));
     }
 
+    public void Receive(AudioModelChangedMessage message)
+    {
+        IsModelAvailable = ModelDownloadService.ModelExists(message.ModelPath);
+
+        if (IsModelAvailable)
+        {
+            if (!hotkeyRegistered)
+            {
+                RegisterHotkey();
+            }
+
+            StatusText = "";
+        }
+        else
+        {
+            hotkeyService.Unregister("audio");
+            hotkeyRegistered = false;
+            StatusText = "Whisper model not found, please download by clicking the button in settings";
+        }
+    }
+
     public void Initialize(IntPtr windowHandle)
     {
         hwnd = windowHandle;
@@ -80,7 +107,8 @@ public sealed partial class AudioViewModel(
         }
 
         audioInjectorService.AudioStateChanged += OnAudioStateChanged;
-        WeakReferenceMessenger.Default.Register(this);
+        WeakReferenceMessenger.Default.Register<ModelDownloadRequestedMessage>(this);
+        WeakReferenceMessenger.Default.Register<AudioModelChangedMessage>(this);
     }
 
     public void OnHotkeyChanged(string hotkey)
@@ -94,16 +122,21 @@ public sealed partial class AudioViewModel(
 
     public void Toggle()
     {
+        if (IsListening)
+        {
+            audioInjectorService.Toggle();
+            return;
+        }
+
         if (!IsModelAvailable || IsModelDownloading)
         {
             StatusText = "Whisper model not ready";
             return;
         }
 
-        var wasRecording = IsRecording;
         var started = audioInjectorService.Toggle();
 
-        if (!started && !wasRecording)
+        if (!started)
         {
             StatusText = audioInjectorService.LastError ?? "Audio capture failed";
         }
@@ -113,13 +146,18 @@ public sealed partial class AudioViewModel(
     {
         audioInjectorService.AudioStateChanged -= OnAudioStateChanged;
         WeakReferenceMessenger.Default.Unregister<ModelDownloadRequestedMessage>(this);
+        WeakReferenceMessenger.Default.Unregister<AudioModelChangedMessage>(this);
     }
 
     private void OnAudioStateChanged(AudioStateChangedEventArgs e)
     {
-        IsRecording = e.IsRecording;
-        StatusText = e.Status;
-        WeakReferenceMessenger.Default.Send(new AudioRecordingChangedMessage(e.IsRecording));
+        Dispatcher.UIThread.Post(() =>
+        {
+            IsListening = e.IsListening;
+            StatusText = e.Status;
+            TranscriptPreview = e.Preview;
+            WeakReferenceMessenger.Default.Send(new AudioRecordingChangedMessage(e.IsListening));
+        });
     }
 
     public void LoadFromSettings()
@@ -129,9 +167,9 @@ public sealed partial class AudioViewModel(
 
     private void RegisterHotkey()
     {
-        if (hwnd != IntPtr.Zero)
+        if (hwnd != IntPtr.Zero && hotkeyService.Register("audio", settingsService.Settings.Audio.Hotkey, hwnd, Toggle))
         {
-            hotkeyService.Register("audio", settingsService.Settings.Audio.Hotkey, hwnd, Toggle);
+            hotkeyRegistered = true;
         }
     }
 

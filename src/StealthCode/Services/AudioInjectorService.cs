@@ -1,81 +1,120 @@
-using System.Text;
 using StealthCode.Audio.Models;
 using StealthCode.Audio.Services;
 using StealthCode.Terminal;
 
 namespace StealthCode.Services;
 
-public sealed record AudioStateChangedEventArgs(bool IsRecording, string Status);
+public sealed record AudioStateChangedEventArgs(bool IsListening, string Status, string Preview);
 
-/// <summary>Captures audio, transcribes it, and injects the result into the terminal.</summary>
-public sealed class AudioInjectorService(
-    SettingsService settingsService,
-    AudioCaptureService audioCaptureService,
-    TranscriptionService transcriptionService,
-    PtyService pty)
+/// <summary>Streams loopback audio through Whisper and injects finished utterances into the terminal.</summary>
+public sealed class AudioInjectorService
 {
-    private static readonly byte[] Enter = "\r"u8.ToArray();
+    private const int PreviewLength = 60;
 
-    public string? LastError => audioCaptureService.LastError;
+    private readonly SettingsService settingsService;
+    private readonly LiveTranscriptionService live;
+    private readonly PtyService pty;
+    private string preview = "";
+    private string status = "";
+    private bool starting;
 
-    /// <summary>Raised when recording or transcription status changes.</summary>
+    public AudioInjectorService(SettingsService settingsService, LiveTranscriptionService live, PtyService pty)
+    {
+        this.settingsService = settingsService;
+        this.live = live;
+        this.pty = pty;
+
+        live.StateChanged += OnStateChanged;
+        live.PartialTranscript += OnPartialTranscript;
+        live.UtteranceCompleted += OnUtteranceCompleted;
+        live.Failed += OnFailed;
+    }
+
+    public string? LastError => live.LastError;
+
+    /// <summary>Raised when listening state, status text, or the transcript preview changes.</summary>
     public event Action<AudioStateChangedEventArgs>? AudioStateChanged;
 
-    /// <summary>Toggles recording. Processing after stop runs in the background.</summary>
+    /// <summary>Toggles listening. Model loading and transcription run in the background.</summary>
     public bool Toggle()
     {
-        if (!audioCaptureService.IsRecording)
+        if (starting)
         {
-            if (audioCaptureService.StartCapture())
-            {
-                AudioStateChanged?.Invoke(new AudioStateChangedEventArgs(true, ""));
-                return true;
-            }
-
             return false;
         }
 
-        // Stop and process in the background.
-        AudioStateChanged?.Invoke(new AudioStateChangedEventArgs(false, "Saving audio..."));
-        var wavPath = audioCaptureService.StopCapture();
-
-        if (wavPath is null)
+        if (live.IsListening)
         {
-            AudioStateChanged?.Invoke(new AudioStateChangedEventArgs(false, ""));
+            _ = live.StopAsync();
+            Raise(false, "Transcribing...", preview);
             return false;
         }
 
+        starting = true;
+        Raise(true, "Loading model...", "");
         var audio = settingsService.Settings.Audio;
 
         Task.Run(async () =>
         {
-            AudioStateChanged?.Invoke(new AudioStateChangedEventArgs(false, "Transcribing audio..."));
-            var result = await transcriptionService.TranscribeAsync(wavPath, audio);
+            var ok = await live.StartAsync(audio);
+            starting = false;
 
-            // A GPU runtime that failed to load fell back to the CPU; make that stick.
-            if (result.GpuFellBack)
+            if (live.GpuFellBack)
             {
                 audio.GpuBackend = GpuBackend.None;
                 settingsService.Save();
             }
 
-            // Only write successful transcripts to the terminal.
-            if (!result.Ok)
+            if (!ok)
             {
-                AudioStateChanged?.Invoke(new AudioStateChangedEventArgs(false, result.Error ?? ""));
-                return;
+                Raise(false, live.LastError ?? "Audio capture failed", "");
             }
-
-            var transcriptPath = Path.ChangeExtension(wavPath, ".txt");
-            await File.WriteAllTextAsync(transcriptPath, result.Text);
-
-            var prompt = $"{audio.SystemPrompt.Trim()} See the transcription file: {transcriptPath.Replace('\\', '/')}";
-            pty.Write(Encoding.UTF8.GetBytes(prompt));
-            await Task.Delay(500);
-            pty.Write(Enter);
-            AudioStateChanged?.Invoke(new AudioStateChangedEventArgs(false, ""));
         });
 
-        return false;
+        return true;
+    }
+
+    private void OnStateChanged(LiveTranscriptionState state)
+    {
+        var status = state switch
+        {
+            LiveTranscriptionState.Listening => "Listening",
+            LiveTranscriptionState.Hearing => "Hearing...",
+            LiveTranscriptionState.Transcribing => "Transcribing...",
+            LiveTranscriptionState.LoadingModel => "Loading model...",
+            _ => live.LastError ?? ""
+        };
+
+        Raise(live.IsListening, status, preview);
+    }
+
+    private void OnPartialTranscript(string text)
+    {
+        preview = text.Length > PreviewLength ? $"…{text[^PreviewLength..]}" : text;
+        Raise(live.IsListening, status, preview);
+    }
+
+    private void OnUtteranceCompleted(string text)
+    {
+        var audio = settingsService.Settings.Audio;
+        _ = PromptInjector.SendAsync(pty, $"{audio.SystemPrompt.Trim()}\n\n{text}");
+        preview = "";
+        Raise(live.IsListening, "Sent", "");
+    }
+
+    private void OnFailed(string message)
+    {
+        Raise(false, message, "");
+
+        if (live.IsListening)
+        {
+            _ = live.StopAsync();
+        }
+    }
+
+    private void Raise(bool isListening, string newStatus, string transcriptPreview)
+    {
+        status = newStatus;
+        AudioStateChanged?.Invoke(new AudioStateChangedEventArgs(isListening, newStatus, transcriptPreview));
     }
 }

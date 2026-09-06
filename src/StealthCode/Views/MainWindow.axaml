@@ -92,7 +92,7 @@
                    Foreground="{StaticResource AccentBrush}"
                    Text="{Binding MultiCaptureText}"
                    IsVisible="{Binding IsMultiCaptureActive}" />
-        <!-- Audio: show hotkey when model ready, REC when recording, download status otherwise -->
+        <!-- Audio: show hotkey when model ready, LIVE when listening, download status otherwise -->
         <TextBlock DockPanel.Dock="Left" FontSize="10" Margin="12,0,0,0"
                    VerticalAlignment="Center"
                    Foreground="{StaticResource MutedFg}"
@@ -100,7 +100,7 @@
                    IsVisible="{Binding Audio.IsModelAvailable}" />
         <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="4"
                     Margin="12,0,0,0" VerticalAlignment="Center"
-                    IsVisible="{Binding Audio.IsRecording}">
+                    IsVisible="{Binding Audio.IsListening}">
           <Ellipse Width="8" Height="8" Fill="{StaticResource AccentBrush}" VerticalAlignment="Center">
             <Ellipse.Styles>
               <Style Selector="Ellipse">
@@ -114,7 +114,7 @@
               </Style>
             </Ellipse.Styles>
           </Ellipse>
-          <TextBlock FontSize="10" Foreground="{StaticResource AccentBrush}" Text="REC"
+          <TextBlock FontSize="10" Foreground="{StaticResource AccentBrush}" Text="LIVE"
                      VerticalAlignment="Center" />
         </StackPanel>
         <TextBlock DockPanel.Dock="Left" FontSize="10" Margin="12,0,0,0"
@@ -122,6 +122,11 @@
                    Foreground="{StaticResource WarningFg}"
                    Text="{Binding Audio.StatusText}"
                    IsVisible="{Binding Audio.StatusText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+        <TextBlock DockPanel.Dock="Left" FontSize="10" Margin="8,0,0,0"
+                   Foreground="{StaticResource MutedFg}" MaxWidth="320"
+                   TextTrimming="CharacterEllipsis"
+                   Text="{Binding Audio.TranscriptPreview}"
+                   IsVisible="{Binding Audio.TranscriptPreview, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="8"
                     HorizontalAlignment="Right" VerticalAlignment="Center">
           <Button FontSize="10" Foreground="{StaticResource AccentBrush}"

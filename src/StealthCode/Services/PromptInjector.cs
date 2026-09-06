@@ -1,0 +1,41 @@
+using System.Text;
+using StealthCode.Terminal;
+
+namespace StealthCode.Services;
+
+/// <summary>Sends a prompt into the terminal as one bracketed paste followed by Enter.</summary>
+public static class PromptInjector
+{
+    public const int EnterDelayMs = 150;
+
+    private static readonly SemaphoreSlim SendLock = new(1, 1);
+    private static readonly byte[] Enter = "\r"u8.ToArray();
+
+    /// <summary>Strips control characters (keeping tab and newline) and pastes the prompt, then presses Enter.</summary>
+    public static async Task SendAsync(PtyService pty, string prompt)
+    {
+        var cleaned = new StringBuilder(prompt.Length);
+        foreach (var c in prompt)
+        {
+            if (c is '\n' or '\t' || !char.IsControl(c))
+            {
+                cleaned.Append(c);
+            }
+        }
+
+        var pasteBytes = Encoding.UTF8.GetBytes($"\x1b[200~{cleaned}\x1b[201~");
+
+        await SendLock.WaitAsync();
+
+        try
+        {
+            pty.Write(pasteBytes);
+            await Task.Delay(EnterDelayMs);
+            pty.Write(Enter);
+        }
+        finally
+        {
+            SendLock.Release();
+        }
+    }
+}
