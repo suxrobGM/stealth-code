@@ -44,7 +44,7 @@ Need to use AI coding tools during a screen share, interview prep, or recording 
 - **Screenshot capture** - Capture your screen and inject it into the active CLI for instant AI analysis
 - **Multi-capture mode** - Accumulate multiple screenshots (e.g., scrollable content) and send them all at once with overlap-aware prompting
 - **No-focus mode** - Keep your browser focused while interacting with Stealth Code — clicks won't steal focus
-- **Meeting audio capture** - Record system audio, transcribe locally with Whisper, and send to the CLI
+- **Hands-free meeting audio** - Toggle a hotkey to listen; speech is transcribed locally with Whisper and sent to the CLI automatically after a short pause
 - **Custom system prompts** - Set separate prompts for screenshot and audio captures to tailor AI responses (e.g., "solve in Python", "give direct answers")
 - **Configurable hotkeys** - Global hotkeys for all actions, customizable in settings
 - **Auto-updates** - Built-in update checker with one-click install
@@ -63,7 +63,7 @@ Need to use AI coding tools during a screen share, interview prep, or recording 
   </tr>
   <tr>
     <td align="center"><em>Press <code>Ctrl+Shift+C</code> to capture your screen and inject it into the CLI. The AI sees the screenshot and responds with a solution - no copy-pasting needed.</em></td>
-    <td align="center"><em>Press <code>Ctrl+Shift+A</code> to start recording system audio. Press again to stop - the audio is transcribed locally via Whisper and sent to the CLI automatically.</em></td>
+    <td align="center"><em>Press <code>Ctrl+Shift+A</code> to start listening. Questions are transcribed locally via Whisper and sent to the CLI automatically after you finish speaking.</em></td>
   </tr>
   <tr>
     <td align="center" colspan="2"><strong>Settings Panel</strong></td>
@@ -93,7 +93,7 @@ Need to use AI coding tools during a screen share, interview prep, or recording 
 | --- | --- |
 | Capture screenshot | `Ctrl+Shift+C` |
 | Multi-capture (accumulate screenshots) | `Ctrl+Shift+X` |
-| Record/stop audio | `Ctrl+Shift+A` |
+| Toggle audio listening | `Ctrl+Shift+A` |
 | Cycle opacity | `Ctrl+Shift+O` |
 | Toggle no-focus mode | `Ctrl+Shift+F` |
 
