@@ -6,7 +6,8 @@ namespace StealthCode.Services;
 /// <summary>Sends a prompt into the terminal as one bracketed paste followed by Enter.</summary>
 public static class PromptInjector
 {
-    public const int EnterDelayMs = 150;
+    /// <summary>Codex on Windows sees the paste as a key burst and ignores Enter for ~200 ms after it; 500 ms is safe.</summary>
+    public const int EnterDelayMs = 500;
 
     private static readonly SemaphoreSlim SendLock = new(1, 1);
     private static readonly byte[] Enter = "\r"u8.ToArray();
