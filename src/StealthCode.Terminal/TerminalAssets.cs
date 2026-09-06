@@ -11,6 +11,7 @@ public static class TerminalAssets
     private static readonly string[] Scripts = ["xterm.min.js", "xterm-addon-fit.min.js", "terminal.js"];
 
     private static string? html;
+    private static TerminalTheme? builtWith;
 
     /// <summary>
     /// Origin the terminal document is served under. Nothing is ever fetched from it; the WebView only needs
@@ -21,9 +22,20 @@ public static class TerminalAssets
     public static Uri BaseUri { get; } = new("https://terminal.stealthcode.invalid/");
 
     /// <summary>The whole terminal — markup, styles and scripts — as one self-contained document.</summary>
-    public static string GetTerminalHtml() => html ??= BuildHtml();
+    public static string GetTerminalHtml(TerminalTheme? theme = null)
+    {
+        theme ??= TerminalTheme.Default;
 
-    private static string BuildHtml()
+        if (html is null || builtWith != theme)
+        {
+            html = BuildHtml(theme);
+            builtWith = theme;
+        }
+
+        return html;
+    }
+
+    private static string BuildHtml(TerminalTheme theme)
     {
         var document = ReadResource("terminal.html");
 
@@ -33,13 +45,34 @@ public static class TerminalAssets
 
         foreach (var script in Scripts)
         {
+            // terminal.js reads the theme at load, so it has to come first.
+            var prelude = script == "terminal.js" ? ThemeScript(theme) : string.Empty;
+
             document = document.Replace(
                 $"<script src=\"{script}\"></script>",
-                $"<script>{Inline(ReadResource(script))}</script>");
+                $"{prelude}<script>{Inline(ReadResource(script))}</script>");
         }
 
         return document;
     }
+
+    /// <summary>Colours terminal.js shares with the app chrome.</summary>
+    private static string ThemeScript(TerminalTheme theme) =>
+        "<script>window.__terminalTheme={"
+        + $"background:{Quote(theme.Background)},"
+        + $"foreground:{Quote(theme.Foreground)},"
+        + $"panel:{Quote(theme.Panel)},"
+        + $"border:{Quote(theme.Border)},"
+        + $"accent:{Quote(theme.Accent)},"
+        + $"warning:{Quote(theme.Warning)},"
+        + $"danger:{Quote(theme.Danger)}"
+        + "};</script>";
+
+    /// <summary>Drops anything that is not a plain CSS colour, since this is interpolated into a script.</summary>
+    private static string Quote(string color) =>
+        color.All(c => char.IsAsciiLetterOrDigit(c) || c is '#' or '(' or ')' or ',' or '.' or '%' or ' ')
+            ? $"\"{color}\""
+            : "null";
 
     /// <summary>
     /// Stops an asset that happens to contain a closing tag from ending the element it is being inlined into.

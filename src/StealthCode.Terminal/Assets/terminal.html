@@ -8,10 +8,34 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { width: 100%; height: 100%; overflow: hidden; background: #1a1a1a; }
     #terminal { width: 100%; height: 100%; }
+
+    /* The WebView owns its own HWND, so only markup inside this document can float over the terminal. */
+    #toasts {
+      position: fixed;
+      right: 12px;
+      bottom: 10px;
+      max-width: 60%;
+      padding: 6px 10px;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      font-family: system-ui, "Segoe UI", sans-serif;
+      font-size: 12px;
+      line-height: 1.4;
+      pointer-events: none;
+      opacity: 0;
+      transform: translateY(4px);
+      transition: opacity 140ms ease-out, transform 140ms ease-out;
+    }
+
+    #toasts.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
   </style>
 </head>
 <body>
   <div id="terminal"></div>
+  <div id="toasts" role="status" aria-live="polite"></div>
   <script src="xterm.min.js"></script>
   <script src="xterm-addon-fit.min.js"></script>
   <script src="terminal.js"></script>

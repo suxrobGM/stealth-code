@@ -2,6 +2,7 @@ using System.Text.Json;
 using Avalonia.Controls;
 using Avalonia.Platform;
 using Avalonia.Threading;
+using StealthCode.Models;
 using StealthCode.Terminal;
 
 namespace StealthCode.Controls;
@@ -16,6 +17,8 @@ public sealed class TerminalWebView : UserControl, IDisposable
     private bool documentLoaded;
     private int pendingCols;
     private int pendingRows;
+
+    private (string Message, StatusLevel Level)? pendingToast;
 
     private string? pendingCommand;
     private string[]? pendingArgs;
@@ -38,7 +41,8 @@ public sealed class TerminalWebView : UserControl, IDisposable
 
         Content = webView;
 
-        webView.NavigateToString(TerminalAssets.GetTerminalHtml(), TerminalAssets.BaseUri);
+        webView.NavigateToString(
+            TerminalAssets.GetTerminalHtml(TerminalScripts.ResolveTheme()), TerminalAssets.BaseUri);
     }
 
     public void StartProcess(string command, string[] args, string workingDirectory)
@@ -57,7 +61,20 @@ public sealed class TerminalWebView : UserControl, IDisposable
 
     public void Reset()
     {
-        webView?.InvokeScript("termReset()");
+        webView?.InvokeScript(TerminalScripts.Reset());
+    }
+
+    /// <summary>Shows a notice inside the terminal document, the only surface that can float over the terminal.</summary>
+    public void ShowToast(string message, StatusLevel level)
+    {
+        if (webView is null || !documentLoaded)
+        {
+            // Startup toasts arrive before the document loads; hold rather than drop.
+            pendingToast = (message, level);
+            return;
+        }
+
+        webView.InvokeScript(TerminalScripts.Toast(message, level));
     }
 
     /// <summary>
@@ -100,7 +117,13 @@ public sealed class TerminalWebView : UserControl, IDisposable
             documentLoaded = true;
 
             // Re-send ready in case invokeCSharpAction wasn't injected when terminal.js first ran
-            webView?.InvokeScript("sendMessage({ type: 'ready', cols: term.cols, rows: term.rows })");
+            webView?.InvokeScript(TerminalScripts.Ready());
+
+            if (pendingToast is { } toast)
+            {
+                pendingToast = null;
+                ShowToast(toast.Message, toast.Level);
+            }
         }
     }
 
@@ -183,8 +206,7 @@ public sealed class TerminalWebView : UserControl, IDisposable
             outputBuffer.Clear();
         }
 
-        var base64 = Convert.ToBase64String(data);
-        webView?.InvokeScript($"termWrite('{base64}')");
+        webView?.InvokeScript(TerminalScripts.Write(data));
     }
 
     private void OnPtyProcessExited(int exitCode)

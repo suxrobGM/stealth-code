@@ -1,9 +1,23 @@
+// Injected by TerminalAssets; the ANSI palette below has no counterpart in the app theme.
+const chrome = window.__terminalTheme || {};
+const background = chrome.background || "#1a1a1a";
+const foreground = chrome.foreground || "#d4d4d4";
+
+document.body.style.background = background;
+
+const toastColors = {
+  info: chrome.accent || "#10b981",
+  success: chrome.accent || "#10b981",
+  warning: chrome.warning || "#f59e0b",
+  error: chrome.danger || "#ef4444",
+};
+
 const term = new Terminal({
   theme: {
-    background: "#1a1a1a",
-    foreground: "#d4d4d4",
-    cursor: "#d4d4d4",
-    cursorAccent: "#1a1a1a",
+    background: background,
+    foreground: foreground,
+    cursor: foreground,
+    cursorAccent: background,
     selectionBackground: "#264f78",
     black: "#1e1e1e",
     red: "#e87a35",
@@ -12,7 +26,7 @@ const term = new Terminal({
     blue: "#569cd6",
     magenta: "#c586c0",
     cyan: "#4ec9b0",
-    white: "#d4d4d4",
+    white: foreground,
     brightBlack: "#808080",
     brightRed: "#f0964a",
     brightGreen: "#6a9955",
@@ -105,21 +119,30 @@ function onTermResize(size) {
 }
 
 /**
+ * Widens a latin1 binary string into bytes.
+ * @param {string} binary
+ * @returns {Uint8Array}
+ */
+function toBytes(binary) {
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
+}
+
+/**
  * Writes base64-encoded data to the terminal.
  * @param {string} base64Data
  * @returns {void}
  */
 function termWrite(base64Data) {
   const binary = atob(base64Data);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) {
-    bytes[i] = binary.charCodeAt(i);
-  }
   // Detect clear-screen sequence (ESC[2J) and also clear scrollback
   if (binary.includes("\x1b[2J")) {
     term.clear();
   }
-  term.write(bytes);
+  term.write(toBytes(binary));
 }
 
 /**
@@ -138,6 +161,30 @@ function termResize(cols, rows) {
  */
 function termReset() {
   term.reset();
+}
+
+let toastTimer = null;
+
+/**
+ * Shows one transient notice over the terminal. Base64 because the text is untrusted.
+ * @param {string} base64Json - base64 of {"text": string, "level": string, "durationMs": number}
+ * @returns {void}
+ */
+function termToast(base64Json) {
+  const host = document.getElementById("toasts");
+  if (!host) return;
+
+  const payload = JSON.parse(new TextDecoder().decode(toBytes(atob(base64Json))));
+
+  // textContent, not innerHTML: the text can come from a CLI error.
+  host.textContent = payload.text;
+  host.style.background = chrome.panel || "#252525";
+  host.style.borderColor = chrome.border || "#333333";
+  host.style.color = toastColors[payload.level] || toastColors.info;
+  host.classList.add("visible");
+
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => host.classList.remove("visible"), payload.durationMs || 2600);
 }
 
 /**
