@@ -1,136 +1,66 @@
+using System.Buffers.Binary;
+using System.Runtime.InteropServices;
+
 namespace StealthCode.Audio.Services;
 
-/// <summary>
-/// Converts raw PCM audio to Whisper-compatible format (16kHz mono float32)
-/// and writes WAV files.
-/// </summary>
+/// <summary>Decodes raw WASAPI PCM packets into mono float32 samples.</summary>
 internal static class AudioConverter
 {
-    private const int WhisperSampleRate = 16000;
+    /// <summary>Sample rate Whisper expects.</summary>
+    public const int WhisperSampleRate = 16000;
 
-    /// <summary>
-    /// Converts raw PCM bytes to 16kHz mono float32 samples for Whisper.
-    /// </summary>
-    public static float[] ToWhisperFormat(byte[] pcmData, CaptureFormat format)
+    /// <summary>Decodes a PCM packet into <paramref name="mono"/>, growing it as needed, and returns the sample count.</summary>
+    public static int DecodeToMono(ReadOnlySpan<byte> pcm, CaptureFormat format, ref float[] mono)
     {
-        var rawSamples = DecodeSamples(pcmData, format.BitsPerSample, format.IsFloat);
-        if (rawSamples.Length == 0)
+        var isFloat = format.IsFloat || format.BitsPerSample == 32;
+        if (!isFloat && format.BitsPerSample != 16)
         {
-            return [];
+            return 0;
         }
 
-        var mono = MixToMono(rawSamples, format.Channels);
-        return Resample(mono, format.SampleRate, WhisperSampleRate);
-    }
-
-    /// <summary>
-    /// Writes float32 mono samples as a 16-bit PCM WAV file.
-    /// </summary>
-    public static void WriteWav(string path, float[] samples, int sampleRate)
-    {
-        const int bitsPerSample = 16;
-        const int channels = 1;
-        var byteRate = sampleRate * channels * bitsPerSample / 8;
-        var blockAlign = channels * bitsPerSample / 8;
-        var dataSize = samples.Length * blockAlign;
-
-        using var fs = File.Create(path);
-        using var bw = new BinaryWriter(fs);
-
-        bw.Write("RIFF"u8);
-        bw.Write(36 + dataSize);
-        bw.Write("WAVE"u8);
-
-        bw.Write("fmt "u8);
-        bw.Write(16);
-        bw.Write((short)1);
-        bw.Write((short)channels);
-        bw.Write(sampleRate);
-        bw.Write(byteRate);
-        bw.Write((short)blockAlign);
-        bw.Write((short)bitsPerSample);
-
-        bw.Write("data"u8);
-        bw.Write(dataSize);
-
-        foreach (var sample in samples)
+        var channels = Math.Max(format.Channels, 1);
+        var bytesPerSample = isFloat ? 4 : 2;
+        var frames = pcm.Length / (bytesPerSample * channels);
+        if (frames == 0)
         {
-            bw.Write((short)(Math.Clamp(sample, -1f, 1f) * 32767));
-        }
-    }
-
-    private static float[] DecodeSamples(byte[] pcmData, int bitsPerSample, bool isFloat)
-    {
-        if (isFloat || bitsPerSample == 32)
-        {
-            var samples = new float[pcmData.Length / 4];
-            Buffer.BlockCopy(pcmData, 0, samples, 0, pcmData.Length);
-            return samples;
+            return 0;
         }
 
-        if (bitsPerSample == 16)
+        if (mono.Length < frames)
         {
-            var samples = new float[pcmData.Length / 2];
-            for (var i = 0; i < samples.Length; i++)
+            mono = new float[frames];
+        }
+
+        var scale = 1f / channels;
+
+        if (isFloat)
+        {
+            var samples = MemoryMarshal.Cast<byte, float>(pcm);
+            for (var i = 0; i < frames; i++)
             {
-                samples[i] = BitConverter.ToInt16(pcmData, i * 2) / 32768f;
+                var sum = 0f;
+                for (var ch = 0; ch < channels; ch++)
+                {
+                    sum += samples[i * channels + ch];
+                }
+
+                mono[i] = sum * scale;
             }
 
-            return samples;
+            return frames;
         }
 
-        return [];
-    }
-
-    private static float[] MixToMono(float[] samples, int channels)
-    {
-        if (channels < 2)
+        for (var i = 0; i < frames; i++)
         {
-            return samples;
-        }
-
-        var mono = new float[samples.Length / channels];
-        for (var i = 0; i < mono.Length; i++)
-        {
-            float sum = 0;
+            var sum = 0f;
             for (var ch = 0; ch < channels; ch++)
             {
-                sum += samples[i * channels + ch];
+                sum += BinaryPrimitives.ReadInt16LittleEndian(pcm[((i * channels + ch) * 2)..]) / 32768f;
             }
 
-            mono[i] = sum / channels;
+            mono[i] = sum * scale;
         }
 
-        return mono;
-    }
-
-    private static float[] Resample(float[] samples, int fromRate, int toRate)
-    {
-        if (fromRate == toRate)
-        {
-            return samples;
-        }
-
-        var ratio = (double)fromRate / toRate;
-        var outputLength = (int)(samples.Length / ratio);
-        var resampled = new float[outputLength];
-
-        for (var i = 0; i < outputLength; i++)
-        {
-            var srcIndex = i * ratio;
-            var index = (int)srcIndex;
-            var frac = (float)(srcIndex - index);
-
-            if (index + 1 < samples.Length)
-            {
-                resampled[i] = samples[index] * (1 - frac) + samples[index + 1] * frac;
-            }
-            else if (index < samples.Length)
-            {
-                resampled[i] = samples[index];
-            }
-        }
-
-        return resampled;
+        return frames;
     }
 }

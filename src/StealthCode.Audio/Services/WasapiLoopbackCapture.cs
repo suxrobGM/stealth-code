@@ -1,6 +1,7 @@
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.Marshalling;
 using System.Runtime.Versioning;
+using System.Threading.Channels;
 using StealthCode.Audio.Interop;
 
 namespace StealthCode.Audio.Services;
@@ -12,7 +13,7 @@ internal sealed record CaptureFormat(int SampleRate, int Channels, int BitsPerSa
 
 /// <summary>
 /// Low-level WASAPI loopback capture. Opens the default render endpoint in loopback mode
-/// and writes raw PCM data to the provided stream on a background thread.
+/// and writes raw PCM packets to the provided channel on a background thread.
 /// </summary>
 [SupportedOSPlatform("windows")]
 internal sealed class WasapiLoopbackCapture
@@ -31,12 +32,13 @@ internal sealed class WasapiLoopbackCapture
     public string? LastError { get; private set; }
 
     /// <summary>
-    /// Begins capturing loopback audio on a background thread, writing raw PCM to <paramref name="target"/>.
+    /// Begins capturing loopback audio on a background thread, writing raw PCM to <paramref name="packets"/>.
     /// </summary>
-    public void Start(MemoryStream target)
+    public void Start(ChannelWriter<byte[]> packets)
     {
+        LastError = null;
         recording = true;
-        captureThread = new Thread(() => CaptureLoop(target))
+        captureThread = new Thread(() => CaptureLoop(packets))
         {
             IsBackground = true,
             Name = "WASAPI-Loopback"
@@ -55,10 +57,10 @@ internal sealed class WasapiLoopbackCapture
     }
 
     /// <summary>
-    /// Initializes WASAPI for loopback capture, then continuously reads audio packets and writes raw PCM data to the target stream until recording is stopped or an error occurs.
-    /// All COM objects are released when done.
+    /// Initializes WASAPI for loopback capture, then continuously reads audio packets and writes raw PCM data to the channel until recording is stopped or an error occurs.
+    /// All COM objects are released and the channel is completed when done.
     /// </summary>
-    private unsafe void CaptureLoop(MemoryStream target)
+    private unsafe void CaptureLoop(ChannelWriter<byte[]> packets)
     {
         nint devicePtr = 0;
         nint audioClientPtr = 0;
@@ -99,7 +101,7 @@ internal sealed class WasapiLoopbackCapture
             hr = audioClient.Start();
             ThrowIfFailed(hr, "Failed to start audio client");
 
-            ReadLoop(captureClient, target, frameSize);
+            ReadLoop(captureClient, packets, frameSize);
 
             audioClient.Stop();
             audioClient.Reset();
@@ -114,13 +116,14 @@ internal sealed class WasapiLoopbackCapture
             ReleaseIfSet(captureClientPtr);
             ReleaseIfSet(audioClientPtr);
             ReleaseIfSet(devicePtr);
+            packets.TryComplete(LastError is null ? null : new InvalidOperationException(LastError));
         }
     }
 
     /// <summary>
-    /// Continuously reads audio packets from the capture client and writes raw PCM data to the target stream until recording is stopped.
+    /// Continuously reads audio packets from the capture client and writes raw PCM data to the channel until recording is stopped.
     /// </summary>
-    private void ReadLoop(IAudioCaptureClient captureClient, MemoryStream target, int frameSize)
+    private void ReadLoop(IAudioCaptureClient captureClient, ChannelWriter<byte[]> packets, int frameSize)
     {
         while (recording)
         {
@@ -145,17 +148,14 @@ internal sealed class WasapiLoopbackCapture
             if (numFrames > 0)
             {
                 var byteCount = (int)(numFrames * frameSize);
+                var buffer = new byte[byteCount];
 
-                if ((flags & WasapiInterop.AUDCLNT_BUFFERFLAGS_SILENT) != 0)
+                if ((flags & WasapiInterop.AUDCLNT_BUFFERFLAGS_SILENT) == 0)
                 {
-                    target.Write(new byte[byteCount], 0, byteCount);
-                }
-                else
-                {
-                    var buffer = new byte[byteCount];
                     Marshal.Copy(dataPtr, buffer, 0, byteCount);
-                    target.Write(buffer, 0, byteCount);
                 }
+
+                packets.TryWrite(buffer);
             }
 
             captureClient.ReleaseBuffer(numFrames);

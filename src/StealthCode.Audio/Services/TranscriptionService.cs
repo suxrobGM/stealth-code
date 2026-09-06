@@ -1,110 +1,135 @@
+using System.Text;
 using StealthCode.Audio.Models;
 using Whisper.net;
 
 namespace StealthCode.Audio.Services;
 
-/// <summary>Result of transcribing one recording.</summary>
-/// <param name="Text">Transcript text, or empty on failure.</param>
-/// <param name="Error">Error message, if transcription failed.</param>
-/// <param name="GpuFellBack">Whether a GPU runtime was skipped and the CPU used instead.</param>
-public sealed record TranscriptionResult(string Text, string? Error = null, bool GpuFellBack = false)
-{
-    /// <summary>Whether transcription succeeded.</summary>
-    public bool Ok => Error is null;
-
-    public static TranscriptionResult Success(string text, bool gpuFellBack = false) =>
-        new(text, null, gpuFellBack);
-
-    public static TranscriptionResult Failure(string error, bool gpuFellBack = false) =>
-        new(string.Empty, error, gpuFellBack);
-}
-
-/// <summary>Converts recorded audio to text with Whisper.net and reuses the loaded model.</summary>
+/// <summary>Transcribes 16 kHz mono audio with Whisper.net and keeps the loaded model.</summary>
 public sealed class TranscriptionService : IDisposable
 {
-    private WhisperFactory? factory;
-    private WhisperProcessor? processor;
-    private string? loadedModelPath;
+    private const int MinChunkSamples = AudioConverter.WhisperSampleRate * 3 / 2;
+    private const string DefaultLanguage = "en";
 
-    /// <summary>Transcribes a recording, reporting any GPU fallback in the result.</summary>
-    public async Task<TranscriptionResult> TranscribeAsync(string wavPath, AudioSettings settings)
+    private WhisperFactory? factory;
+    private string? loadedModelPath;
+    private string language = DefaultLanguage;
+
+    /// <summary>True when a GPU runtime was skipped and the CPU used instead.</summary>
+    public bool GpuFellBack { get; private set; }
+
+    /// <summary>Loads the model, reloading it when the path changed. Returns an error message on failure.</summary>
+    public Task<string?> LoadAsync(AudioSettings settings) => Task.Run(() => Load(settings));
+
+    /// <summary>Runs silence through the model so the first real chunk is not slowed by initialization.</summary>
+    public Task WarmUpAsync(CancellationToken ct) => TranscribeAsync(new float[MinChunkSamples], null, ct);
+
+    /// <summary>Transcribes one chunk, using <paramref name="prompt"/> as context for the decoder.</summary>
+    public async Task<string> TranscribeAsync(float[] samples16k, string? prompt, CancellationToken ct)
     {
+        if (factory is null || samples16k.Length == 0)
+        {
+            return string.Empty;
+        }
+
+        var samples = samples16k;
+        if (samples.Length < MinChunkSamples)
+        {
+            samples = new float[MinChunkSamples];
+            samples16k.CopyTo(samples, 0);
+        }
+
+        var builder = language == "auto"
+            ? factory.CreateBuilder().WithLanguageDetection()
+            : factory.CreateBuilder().WithLanguage(language);
+
+        builder = builder
+            .WithThreads(Math.Min(Environment.ProcessorCount, 8))
+            .WithNoSpeechThreshold(0.6f)
+            .WithTemperatureInc(0f);
+
+        if (!string.IsNullOrWhiteSpace(prompt))
+        {
+            builder = builder.WithPrompt(prompt);
+        }
+
+        var text = new StringBuilder();
+
+        // The greedy strategy comes last because it returns a different builder type.
+        await using var processor = builder.WithGreedySamplingStrategy().Build();
+
+        await foreach (var segment in processor.ProcessAsync(samples, ct))
+        {
+            var cleaned = TranscriptFilter.Clean(segment.Text, segment.NoSpeechProbability);
+            if (cleaned.Length == 0)
+            {
+                continue;
+            }
+
+            if (text.Length > 0)
+            {
+                text.Append(' ');
+            }
+
+            text.Append(cleaned);
+        }
+
+        return text.ToString();
+    }
+
+    public void Dispose() => Unload();
+
+    private string? Load(AudioSettings settings)
+    {
+        language = NormalizeLanguage(settings.Language);
+
         if (string.IsNullOrWhiteSpace(settings.ModelPath) || !File.Exists(settings.ModelPath))
         {
-            return TranscriptionResult.Failure("Whisper model not found. Set the model path in Settings > Audio.");
+            return "Whisper model not found. Set the model path in Settings > Audio.";
         }
 
-        if (!File.Exists(wavPath))
-        {
-            return TranscriptionResult.Failure("The recording could not be found.");
-        }
-
-        var loadError = EnsureProcessor(settings.ModelPath, settings.GpuBackend);
-        var gpuFellBack = settings.GpuBackend != GpuBackend.None && WhisperRuntime.GpuDisabledAfterCrash;
-
-        if (processor is null)
-        {
-            // Add context because the raw error is not useful by itself.
-            return TranscriptionResult.Failure($"Failed to load the Whisper model. {loadError}", gpuFellBack);
-        }
-
-        await using var fileStream = File.OpenRead(wavPath);
-        var segments = new List<string>();
-
-        await foreach (var segment in processor.ProcessAsync(fileStream))
-        {
-            if (!string.IsNullOrWhiteSpace(segment.Text))
-            {
-                segments.Add(segment.Text.Trim());
-            }
-        }
-
-        return segments.Count > 0
-            ? TranscriptionResult.Success(string.Join(" ", segments), gpuFellBack)
-            : TranscriptionResult.Failure("No speech was found in the recording.", gpuFellBack);
-    }
-
-    public void Dispose()
-    {
-        processor?.Dispose();
-        factory?.Dispose();
-    }
-
-    /// <summary>Loads the model if needed. Returns an error message on failure.</summary>
-    private string? EnsureProcessor(string modelPath, GpuBackend backend)
-    {
-        if (processor is not null && loadedModelPath == modelPath)
+        if (factory is not null && loadedModelPath == settings.ModelPath)
         {
             return null;
         }
 
         Unload();
-        WhisperRuntime.Configure(backend);
+        WhisperRuntime.Configure(settings.GpuBackend);
 
         try
         {
-            factory = WhisperFactory.FromPath(modelPath);
-            processor = factory.CreateBuilder()
-                .WithLanguage("auto")
-                .Build();
+            factory = WhisperFactory.FromPath(settings.ModelPath);
 
             // The model loaded, so clear the GPU load marker.
             WhisperRuntime.MarkLoadSucceeded();
-            loadedModelPath = modelPath;
+            loadedModelPath = settings.ModelPath;
+            GpuFellBack = settings.GpuBackend != GpuBackend.None && WhisperRuntime.GpuDisabledAfterCrash;
             return null;
         }
         catch (Exception ex)
         {
             Unload();
-            return ex.Message;
+
+            // Add context because the raw error is not useful by itself.
+            return $"Failed to load the Whisper model. {ex.Message}";
         }
+    }
+
+    private static string NormalizeLanguage(string? value)
+    {
+        var lang = value?.Trim().ToLowerInvariant();
+        if (lang == "auto")
+        {
+            return lang;
+        }
+
+        return lang is { Length: 2 } && char.IsAsciiLetter(lang[0]) && char.IsAsciiLetter(lang[1])
+            ? lang
+            : DefaultLanguage;
     }
 
     private void Unload()
     {
-        processor?.Dispose();
         factory?.Dispose();
-        processor = null;
         factory = null;
         loadedModelPath = null;
     }

@@ -14,8 +14,14 @@ internal static class AudioPaths
     /// <summary>Prefix used for audio recording files.</summary>
     public const string CapturePrefix = "audio_";
 
-    /// <summary>Where the Whisper model is downloaded to unless the user picks somewhere else.</summary>
-    public static readonly string DefaultModel = Path.Combine(Root, "models", "ggml-base.bin");
+    /// <summary>Where Whisper models are downloaded to.</summary>
+    public static readonly string Models = Path.Combine(Root, "models");
+
+    /// <summary>Path of a model file in the models folder.</summary>
+    public static string ModelFile(string fileName) => Path.Combine(Models, fileName);
+
+    /// <summary>The model used unless the user picks another one.</summary>
+    public static readonly string DefaultModel = ModelFile("ggml-base.bin");
 
     /// <summary>Folder for downloaded GPU packs, outside the app folder.</summary>
     public static readonly string GpuRoot = Path.Combine(Root, "gpu");

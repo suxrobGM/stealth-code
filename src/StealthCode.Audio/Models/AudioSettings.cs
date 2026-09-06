@@ -27,6 +27,12 @@ public sealed record AudioSettings
     /// <summary>Whisper runtime to use. GPU options use the CPU until their pack is installed.</summary>
     public GpuBackend GpuBackend { get; set; }
 
+    /// <summary>Spoken language as a two-letter code, or "auto" to detect it.</summary>
+    public string Language { get; set; } = "en";
+
+    /// <summary>Silence that ends an utterance and submits it to the CLI.</summary>
+    public int EndOfUtteranceMs { get; set; } = 1800;
+
     public string SystemPrompt { get; set; } =
-        "Listen to the transcribed audio and answer any questions or problems concisely. For interview questions, give direct answers. For coding problems, provide the solution. Do not summarize the transcript unless asked.";
+        "Below is a live transcript of what the interviewer just said. Answer the question or solve the problem directly and concisely. For coding problems give the solution. Do not summarize or repeat the transcript.";
 }

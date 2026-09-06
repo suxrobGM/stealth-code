@@ -7,7 +7,7 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddAudioCapture(this IServiceCollection services)
     {
-        services.AddSingleton<AudioCaptureService>();
+        services.AddSingleton<LiveTranscriptionService>();
         services.AddSingleton<TranscriptionService>();
         services.AddSingleton<ModelDownloadService>();
         services.AddSingleton<GpuPackService>();
