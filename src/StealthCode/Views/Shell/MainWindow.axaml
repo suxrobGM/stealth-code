@@ -1,0 +1,122 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:StealthCode.ViewModels.Shell"
+        xmlns:controls="using:StealthCode.Controls"
+        xmlns:views="using:StealthCode.Views.Shell"
+        x:Class="StealthCode.Views.Shell.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Icon="/Assets/logo.png"
+        Title="Stealth Code"
+        Width="900" Height="600"
+        MinWidth="500" MinHeight="300"
+        WindowStartupLocation="CenterScreen"
+        ExtendClientAreaToDecorationsHint="True"
+        ExtendClientAreaTitleBarHeightHint="28"
+        Background="{StaticResource WindowBg}"
+        Topmost="{Binding IsAlwaysOnTop}"
+        ShowInTaskbar="False"
+        WindowDecorations="BorderOnly">
+
+  <Grid RowDefinitions="28,*,28" ColumnDefinitions="*,Auto">
+
+    <!-- Title Bar (acts as drag region) -->
+    <Border Grid.Row="0" Grid.ColumnSpan="2" Background="{StaticResource TitleBarBg}">
+      <DockPanel>
+
+        <!-- Right: Window controls -->
+        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Margin="0,0,4,0">
+          <Button Classes="chrome" Classes.pinned="{Binding IsAlwaysOnTop}"
+                  Content="{StaticResource IconPin}"
+                  Command="{Binding TogglePinCommand}" ToolTip.Tip="Toggle always on top" />
+          <Button Classes="chrome" Content="{StaticResource IconSettings}"
+                  Command="{Binding ToggleSettingsCommand}" ToolTip.Tip="Settings" />
+          <Button Classes="chrome" Content="{StaticResource IconMinimize}"
+                  Click="OnMinimizeClick" ToolTip.Tip="Minimise to tray" />
+          <Button Classes="chrome" Content="{StaticResource IconMaximize}"
+                  Click="OnMaximizeClick" ToolTip.Tip="Maximise" />
+          <Button Classes="chrome close" Content="{StaticResource IconClose}"
+                  Click="OnCloseClick" ToolTip.Tip="Close" />
+        </StackPanel>
+
+        <!-- Left: App identity + Provider + Status -->
+        <StackPanel Orientation="Horizontal" Spacing="12" Margin="12,0,0,0"
+                    VerticalAlignment="Center">
+          <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+            <Image Source="/Assets/logo-16.png" Width="14" Height="14" VerticalAlignment="Center" />
+            <TextBlock Classes="app-name" Text="STEALTH CODE" />
+          </StackPanel>
+
+          <ComboBox Classes="inline"
+                    ItemsSource="{Binding ProviderNames}"
+                    SelectedIndex="{Binding SelectedProviderIndex}" />
+
+          <!-- Reports what SetWindowDisplayAffinity actually returned -->
+          <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center"
+                      IsVisible="{Binding IsProtected}">
+            <Ellipse Classes="chip-dot" Fill="{StaticResource AccentDimBrush}" />
+            <TextBlock Classes="bar-text accent" Text="PROTECTED" />
+          </StackPanel>
+
+          <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center"
+                      IsVisible="{Binding !IsProtected}"
+                      ToolTip.Tip="This window is visible to screen capture">
+            <Ellipse Classes="chip-dot" Fill="{StaticResource DangerBrush}" />
+            <TextBlock Classes="bar-text danger" Text="UNPROTECTED" />
+          </StackPanel>
+
+          <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center"
+                      IsVisible="{Binding IsNoFocus}">
+            <Ellipse Classes="chip-dot" Fill="{StaticResource WarningDimBrush}" />
+            <TextBlock Classes="bar-text warning" Text="NO-FOCUS" />
+          </StackPanel>
+        </StackPanel>
+
+      </DockPanel>
+    </Border>
+
+    <!-- Terminal (padding keeps native HWND away from window resize borders) -->
+    <Grid Grid.Row="1" Grid.Column="0" RowDefinitions="*,Auto">
+      <controls:TerminalWebView Grid.Row="0" x:Name="Terminal" Margin="4,0,4,0" />
+
+      <!-- Live transcript panel, stacked below the terminal so it never overlaps the native HWND -->
+      <Border Grid.Row="1" Margin="4,4,4,0" Padding="10,6"
+              Background="{StaticResource PanelBg}"
+              BorderBrush="{StaticResource DividerBrush}" BorderThickness="1"
+              CornerRadius="{StaticResource CornerRadiusSm}"
+              IsVisible="{Binding Audio.IsTranscriptPanelVisible}">
+        <DockPanel>
+          <DockPanel DockPanel.Dock="Top" Margin="0,0,0,4">
+            <TextBlock DockPanel.Dock="Left" Classes="section-header" Text="LIVE TRANSCRIPT"
+                       VerticalAlignment="Center" />
+            <TextBlock DockPanel.Dock="Left" Classes="status" Margin="10,0,0,0"
+                       Classes.warning="{Binding Audio.IsStatusWarning}"
+                       Classes.danger="{Binding Audio.IsStatusError}"
+                       Text="{Binding Audio.StatusText}" VerticalAlignment="Center" />
+            <TextBlock DockPanel.Dock="Right" Classes="bar-text" HorizontalAlignment="Right"
+                       Text="{Binding Audio.Hotkey}" />
+          </DockPanel>
+          <ScrollViewer MaxHeight="96" VerticalScrollBarVisibility="Auto">
+            <Panel>
+              <TextBlock FontSize="{StaticResource FontSizeSm}" Foreground="{StaticResource SecondaryFg}"
+                         Text="Waiting for speech..."
+                         IsVisible="{Binding Audio.TranscriptText, Converter={x:Static StringConverters.IsNullOrEmpty}}" />
+              <TextBlock FontSize="{StaticResource FontSizeSm}" TextWrapping="Wrap" LineHeight="18"
+                         Foreground="{StaticResource PrimaryFg}"
+                         Text="{Binding Audio.TranscriptText}"
+                         IsVisible="{Binding Audio.TranscriptText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+            </Panel>
+          </ScrollViewer>
+        </DockPanel>
+      </Border>
+    </Grid>
+
+    <!-- Settings Panel -->
+    <ContentControl Grid.Row="1" Grid.Column="1"
+                    IsVisible="{Binding IsSettingsVisible}"
+                    Content="{Binding SettingsContent}" />
+
+    <!-- Action Bar -->
+    <views:ActionBar Grid.Row="2" Grid.ColumnSpan="2" />
+
+  </Grid>
+</Window>

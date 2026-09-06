@@ -6,10 +6,15 @@ using Microsoft.Extensions.DependencyInjection;
 using StealthCode.Audio;
 using StealthCode.ScreenCapture;
 using StealthCode.Services;
+using StealthCode.Services.Hotkeys;
+using StealthCode.Services.Injection;
 using StealthCode.Terminal;
+using StealthCode.Terminal.Pty;
 using StealthCode.Updater;
-using StealthCode.ViewModels;
+using StealthCode.ViewModels.Capture;
 using StealthCode.ViewModels.Settings;
+using StealthCode.ViewModels.Shell;
+using StealthCode.Views.Shell;
 
 namespace StealthCode;
 

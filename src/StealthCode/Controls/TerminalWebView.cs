@@ -4,6 +4,8 @@ using Avalonia.Platform;
 using Avalonia.Threading;
 using StealthCode.Models;
 using StealthCode.Terminal;
+using StealthCode.Terminal.Pty;
+using StealthCode.Terminal.Web;
 
 namespace StealthCode.Controls;
 

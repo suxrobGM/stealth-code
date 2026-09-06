@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using StealthCode.Terminal.Pty;
 
 namespace StealthCode.Terminal;
 

@@ -2,7 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:StealthCode.ViewModels.Settings"
              xmlns:audio="using:StealthCode.Audio.Models"
-             xmlns:audioSvc="using:StealthCode.Audio.Services"
+             xmlns:audioSvc="using:StealthCode.Audio.Downloads"
              x:Class="StealthCode.Views.Settings.AudioSection"
              x:DataType="vm:AudioSettingsViewModel">
 

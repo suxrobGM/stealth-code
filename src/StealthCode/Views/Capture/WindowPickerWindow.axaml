@@ -1,0 +1,36 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:StealthCode.ViewModels.Capture"
+        x:Class="StealthCode.Views.Capture.WindowPickerWindow"
+        x:DataType="vm:WindowPickerViewModel"
+        Title="Select Window"
+        Width="450" Height="400"
+        WindowStartupLocation="CenterOwner"
+        Background="{StaticResource PanelBg}"
+        CanResize="False">
+
+  <Grid RowDefinitions="Auto,*,Auto" Margin="16">
+
+    <!-- Header -->
+    <TextBlock Grid.Row="0" Classes="dialog-title"
+               Text="Select a window to capture" Margin="0,0,0,12" />
+
+    <!-- Window List -->
+    <ListBox Grid.Row="1"
+             ItemsSource="{Binding WindowTitles}"
+             SelectedIndex="{Binding SelectedIndex}"
+             Background="{StaticResource ControlBg}"
+             Foreground="{StaticResource PrimaryFg}"
+             BorderThickness="0"
+             CornerRadius="{StaticResource CornerRadiusSm}"
+             DoubleTapped="OnListDoubleTapped" />
+
+    <!-- Buttons -->
+    <StackPanel Grid.Row="2" Orientation="Horizontal"
+                HorizontalAlignment="Right" Spacing="8" Margin="0,12,0,0">
+      <Button Classes="secondary" Content="Cancel" Command="{Binding CancelCommand}" />
+      <Button Classes="primary" Content="Select" Command="{Binding SelectCommand}" />
+    </StackPanel>
+
+  </Grid>
+</Window>

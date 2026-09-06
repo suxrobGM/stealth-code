@@ -1,5 +1,5 @@
 using Avalonia.Input;
-using StealthCode.Services;
+using StealthCode.Services.Hotkeys;
 
 namespace StealthCode.Controls;
 

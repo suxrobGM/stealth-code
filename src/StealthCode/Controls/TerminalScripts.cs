@@ -4,7 +4,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 using StealthCode.Models;
-using StealthCode.Terminal;
+using StealthCode.Terminal.Web;
 
 namespace StealthCode.Controls;
 

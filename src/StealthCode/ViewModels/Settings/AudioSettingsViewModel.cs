@@ -1,8 +1,8 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using StealthCode.Audio.Downloads;
 using StealthCode.Audio.Models;
-using StealthCode.Audio.Services;
 using StealthCode.Messages;
 using StealthCode.Services;
 using StealthCode.Utilities;

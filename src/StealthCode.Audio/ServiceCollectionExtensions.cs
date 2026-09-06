@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
-using StealthCode.Audio.Services;
+using StealthCode.Audio.Downloads;
+using StealthCode.Audio.Transcription;
 
 namespace StealthCode.Audio;
 

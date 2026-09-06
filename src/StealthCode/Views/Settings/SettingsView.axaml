@@ -1,6 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:vm="using:StealthCode.ViewModels"
+             xmlns:vm="using:StealthCode.ViewModels.Shell"
              xmlns:settings="using:StealthCode.ViewModels.Settings"
              xmlns:views="using:StealthCode.Views.Settings"
              x:Class="StealthCode.Views.Settings.SettingsView"

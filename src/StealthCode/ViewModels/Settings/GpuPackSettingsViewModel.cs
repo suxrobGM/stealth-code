@@ -1,8 +1,8 @@
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using StealthCode.Audio.Downloads;
 using StealthCode.Audio.Models;
-using StealthCode.Audio.Services;
 using StealthCode.Services;
 using StealthCode.Utilities;
 
