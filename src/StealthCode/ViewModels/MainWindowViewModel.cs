@@ -3,7 +3,6 @@ using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using StealthCode.Audio.Utilities;
 using StealthCode.Messages;
 using StealthCode.ScreenCapture.Models;
 using StealthCode.ScreenCapture.Utilities;
@@ -177,7 +176,6 @@ public sealed partial class MainWindowViewModel : ViewModelBase,
         initialized = true;
         PtyService.ProcessExited += OnProcessExited;
         CleanupUtils.CleanupOldCaptures();
-        AudioCleanupUtils.CleanupOldRecordings();
         WeakReferenceMessenger.Default.Send(new ApplyOpacityMessage(WindowOpacity));
         Audio.Initialize(windowHandle);
         RegisterGlobalHotkeys();

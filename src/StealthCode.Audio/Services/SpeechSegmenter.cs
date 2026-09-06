@@ -1,26 +1,23 @@
 namespace StealthCode.Audio.Services;
 
-/// <summary>Thresholds and timings used to split a stream into speech chunks.</summary>
-internal sealed record SpeechSegmenterOptions(
-    int SpeechThresholdDb = -40,
-    int SilenceMarginDb = 6,
-    int LeadInMs = 300,
-    int MinSpeechMs = 300,
-    int ChunkSplitSilenceMs = 700,
-    int MaxChunkMs = 15000,
-    int EndOfUtteranceMs = 1800);
-
 /// <summary>A span of speech to transcribe, or a marker that the utterance ended.</summary>
 public sealed record SpeechChunk(float[] Samples, bool EndsUtterance);
 
 /// <summary>Splits a 16 kHz mono stream into speech chunks and utterance boundaries.</summary>
 internal sealed class SpeechSegmenter(
-    SpeechSegmenterOptions options,
+    int endOfUtteranceMs,
     Action<SpeechChunk> emit,
-    Action<bool> speechActiveChanged)
+    Action speechActiveChanged)
 {
+    private const int SpeechThresholdDb = -40;
+    private const int SilenceMarginDb = 6;
+    private const int LeadInMs = 300;
+    private const int MinSpeechMs = 300;
+    private const int ChunkSplitSilenceMs = 700;
+    private const int MaxChunkMs = 15000;
     private const int FrameMs = 20;
     private const int FrameSamples = AudioConverter.WhisperSampleRate / 1000 * FrameMs;
+    private const int LeadInFrames = LeadInMs / FrameMs;
 
     private static readonly float[] SilentFrame = new float[FrameSamples];
 
@@ -32,8 +29,7 @@ internal sealed class SpeechSegmenter(
     }
 
     private readonly float[] frame = new float[FrameSamples];
-    private readonly int leadInFrames = Math.Max(options.LeadInMs / FrameMs, 0);
-    private readonly float[] leadInBuffer = new float[Math.Max(options.LeadInMs / FrameMs, 0) * FrameSamples];
+    private readonly float[] leadInBuffer = new float[LeadInFrames * FrameSamples];
     private readonly List<float> chunk = [];
     private State state;
     private int frameSampleCount;
@@ -87,7 +83,7 @@ internal sealed class SpeechSegmenter(
 
         if (state == State.Speech)
         {
-            speechActiveChanged(false);
+            speechActiveChanged();
         }
 
         state = State.Idle;
@@ -102,8 +98,8 @@ internal sealed class SpeechSegmenter(
     {
         var loudness = LoudnessDb(samples);
         isSpeech = isSpeech
-            ? loudness >= options.SpeechThresholdDb - options.SilenceMarginDb
-            : loudness >= options.SpeechThresholdDb;
+            ? loudness >= SpeechThresholdDb - SilenceMarginDb
+            : loudness >= SpeechThresholdDb;
 
         switch (state)
         {
@@ -130,16 +126,16 @@ internal sealed class SpeechSegmenter(
                 else
                 {
                     silenceMs += FrameMs;
-                    if (silenceMs >= options.ChunkSplitSilenceMs)
+                    if (silenceMs >= ChunkSplitSilenceMs)
                     {
                         EmitChunk();
                         state = State.Trailing;
-                        speechActiveChanged(false);
+                        speechActiveChanged();
                         break;
                     }
                 }
 
-                if (chunkMs >= options.MaxChunkMs)
+                if (chunkMs >= MaxChunkMs)
                 {
                     EmitChunk();
                 }
@@ -155,7 +151,7 @@ internal sealed class SpeechSegmenter(
 
                 StoreLeadIn(samples);
                 silenceMs += FrameMs;
-                if (silenceMs >= options.EndOfUtteranceMs)
+                if (silenceMs >= endOfUtteranceMs)
                 {
                     EndUtterance();
                     state = State.Idle;
@@ -172,7 +168,7 @@ internal sealed class SpeechSegmenter(
         chunkSpeechMs += FrameMs;
         silenceMs = 0;
         state = State.Speech;
-        speechActiveChanged(true);
+        speechActiveChanged();
     }
 
     private void Append(ReadOnlySpan<float> samples)
@@ -183,17 +179,12 @@ internal sealed class SpeechSegmenter(
 
     private void StoreLeadIn(ReadOnlySpan<float> samples)
     {
-        if (leadInFrames == 0)
-        {
-            return;
-        }
-
-        var slot = (leadInStart + leadInCount) % leadInFrames;
+        var slot = (leadInStart + leadInCount) % LeadInFrames;
         samples.CopyTo(leadInBuffer.AsSpan(slot * FrameSamples, FrameSamples));
 
-        if (leadInCount == leadInFrames)
+        if (leadInCount == LeadInFrames)
         {
-            leadInStart = (leadInStart + 1) % leadInFrames;
+            leadInStart = (leadInStart + 1) % LeadInFrames;
         }
         else
         {
@@ -205,7 +196,7 @@ internal sealed class SpeechSegmenter(
     {
         for (var i = 0; i < leadInCount; i++)
         {
-            var slot = (leadInStart + i) % leadInFrames;
+            var slot = (leadInStart + i) % LeadInFrames;
             chunk.AddRange(leadInBuffer.AsSpan(slot * FrameSamples, FrameSamples));
         }
 
@@ -216,7 +207,7 @@ internal sealed class SpeechSegmenter(
 
     private void EmitChunk()
     {
-        if (chunk.Count > 0 && chunkSpeechMs >= options.MinSpeechMs)
+        if (chunk.Count > 0 && chunkSpeechMs >= MinSpeechMs)
         {
             emit(new SpeechChunk([.. chunk], false));
             hasEmittedChunk = true;

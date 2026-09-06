@@ -38,14 +38,12 @@ public sealed class TranscriptionService : IDisposable
             samples16k.CopyTo(samples, 0);
         }
 
-        var builder = language == "auto"
-            ? factory.CreateBuilder().WithLanguageDetection()
-            : factory.CreateBuilder().WithLanguage(language);
-
-        builder = builder
+        var builder = factory.CreateBuilder()
             .WithThreads(Math.Min(Environment.ProcessorCount, 8))
             .WithNoSpeechThreshold(0.6f)
             .WithTemperatureInc(0f);
+
+        builder = language == "auto" ? builder.WithLanguageDetection() : builder.WithLanguage(language);
 
         if (!string.IsNullOrWhiteSpace(prompt))
         {

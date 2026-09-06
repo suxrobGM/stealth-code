@@ -89,7 +89,7 @@ public sealed class LiveTranscriptionService(TranscriptionService transcription)
 
             var writer = chunks.Writer;
             segmenter = new SpeechSegmenter(
-                new SpeechSegmenterOptions(EndOfUtteranceMs: settings.EndOfUtteranceMs),
+                settings.EndOfUtteranceMs,
                 chunk => writer.TryWrite(chunk),
                 OnSpeechActiveChanged);
 
@@ -169,26 +169,28 @@ public sealed class LiveTranscriptionService(TranscriptionService transcription)
         var resampled = new float[4096];
         StreamingResampler? resampler = null;
         string? failure = null;
+        Task<bool>? pendingRead = null;
 
         try
         {
             while (true)
             {
-                using var waitTimeout = CancellationTokenSource.CreateLinkedTokenSource(ct);
-                waitTimeout.CancelAfter(SilenceCheckIntervalMs);
+                // The pending read is kept across ticks: the channel allows only one waiting reader.
+                pendingRead ??= reader.WaitToReadAsync(ct).AsTask();
 
-                try
+                if (await Task.WhenAny(pendingRead, Task.Delay(SilenceCheckIntervalMs, ct)) != pendingRead)
                 {
-                    if (!await reader.WaitToReadAsync(waitTimeout.Token))
-                    {
-                        break;
-                    }
-                }
-                catch (OperationCanceledException) when (!ct.IsCancellationRequested)
-                {
+                    ct.ThrowIfCancellationRequested();
                     segmenter!.AdvanceSilence(SilenceCheckIntervalMs);
                     continue;
                 }
+
+                if (!await pendingRead)
+                {
+                    break;
+                }
+
+                pendingRead = null;
 
                 while (reader.TryRead(out var packet))
                 {
@@ -289,7 +291,7 @@ public sealed class LiveTranscriptionService(TranscriptionService transcription)
         }
     }
 
-    private void OnSpeechActiveChanged(bool active)
+    private void OnSpeechActiveChanged()
     {
         if (transcribing)
         {

@@ -49,7 +49,7 @@ public sealed class AudioInjectorService
 
         starting = true;
         transcript = "";
-        Raise(true, "Loading model...", "");
+        Raise(true, "Loading model...");
         var audio = settingsService.Settings.Audio;
 
         Task.Run(async () =>
@@ -65,7 +65,8 @@ public sealed class AudioInjectorService
 
             if (!ok)
             {
-                Raise(false, live.LastError ?? "Audio capture failed", "");
+                transcript = "";
+                Raise(false, live.LastError ?? "Audio capture failed");
             }
         });
 
@@ -84,25 +85,26 @@ public sealed class AudioInjectorService
             _ => live.LastError ?? ""
         };
 
-        Raise(live.IsListening, status, transcript);
+        Raise(live.IsListening, status);
     }
 
     private void OnPartialTranscript(string text)
     {
         transcript = text;
-        Raise(live.IsListening, status, transcript);
+        Raise(live.IsListening, status);
     }
 
     private void OnUtteranceCompleted(string text)
     {
         var audio = settingsService.Settings.Audio;
         _ = PromptInjector.SendAsync(pty, $"{audio.SystemPrompt.Trim()}\n\n{text}");
-        Raise(live.IsListening, "Sent", transcript);
+        Raise(live.IsListening, "Sent");
     }
 
     private void OnFailed(string message)
     {
-        Raise(false, message, "");
+        transcript = "";
+        Raise(false, message);
 
         if (live.IsListening)
         {
@@ -110,9 +112,9 @@ public sealed class AudioInjectorService
         }
     }
 
-    private void Raise(bool isListening, string newStatus, string transcriptText)
+    private void Raise(bool isListening, string newStatus)
     {
         status = newStatus;
-        AudioStateChanged?.Invoke(new AudioStateChangedEventArgs(isListening, newStatus, transcriptText));
+        AudioStateChanged?.Invoke(new AudioStateChangedEventArgs(isListening, newStatus, transcript));
     }
 }

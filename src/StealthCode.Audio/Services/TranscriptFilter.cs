@@ -33,23 +33,9 @@ internal static partial class TranscriptFilter
         }
 
         var cleaned = WhitespacePattern().Replace(TagPattern().Replace(text, " "), " ").Trim();
-        var hasContent = false;
 
-        foreach (var ch in cleaned)
-        {
-            if (char.IsLetterOrDigit(ch))
-            {
-                hasContent = true;
-                break;
-            }
-        }
-
-        if (!hasContent)
-        {
-            return string.Empty;
-        }
-
+        // Empty once stripped means the segment held no letters or digits at all.
         var normalized = NonAlphanumericPattern().Replace(cleaned, " ").Trim();
-        return Hallucinations.Contains(normalized) ? string.Empty : cleaned;
+        return normalized.Length == 0 || Hallucinations.Contains(normalized) ? string.Empty : cleaned;
     }
 }

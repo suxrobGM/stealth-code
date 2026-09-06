@@ -8,12 +8,6 @@ internal static class AudioPaths
     private static readonly string Root = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StealthCode");
 
-    /// <summary>Where recordings are written, as <c>audio_*.wav</c>.</summary>
-    public static readonly string Captures = Path.Combine(Root, "captures");
-
-    /// <summary>Prefix used for audio recording files.</summary>
-    public const string CapturePrefix = "audio_";
-
     /// <summary>Where Whisper models are downloaded to.</summary>
     public static readonly string Models = Path.Combine(Root, "models");
 

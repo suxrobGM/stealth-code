@@ -69,11 +69,6 @@ public sealed partial class AudioSettingsViewModel : SettingsSectionViewModel,
     {
         IsModelDownloading = false;
         DownloadModelButtonText = message.Success ? "Downloaded" : "Download Model";
-
-        if (message.Success)
-        {
-            WeakReferenceMessenger.Default.Send(new AudioModelChangedMessage(SettingsService.Settings.Audio.ModelPath));
-        }
     }
 
     protected override void LoadCore()
@@ -189,7 +184,9 @@ public sealed partial class AudioSettingsViewModel : SettingsSectionViewModel,
 
         SettingsService.Settings.Audio.ModelPath = value.Path;
         Save();
-        DownloadModelButtonText = value.IsDownloaded() ? "Model ready" : $"Download ({value.SizeText})";
+        DownloadModelButtonText = ModelDownloadService.ModelExists(value.Path)
+            ? "Model ready"
+            : $"Download ({value.SizeText})";
         WeakReferenceMessenger.Default.Send(new AudioModelChangedMessage(value.Path));
     }
 

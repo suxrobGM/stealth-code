@@ -17,19 +17,17 @@ public sealed partial class AudioViewModel(
     IRecipient<ModelDownloadRequestedMessage>, IRecipient<AudioModelChangedMessage>
 {
     private IntPtr hwnd;
-    private bool hotkeyRegistered;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsTranscriptPanelVisible))]
     public partial bool IsListening { get; set; }
 
     [ObservableProperty]
     public partial string HotkeyText { get; set; } = "\u23FA Ctrl+Shift+A";
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsTranscriptPanelVisible))]
     public partial string TranscriptText { get; set; } = "";
-
-    [ObservableProperty]
-    public partial bool IsTranscriptPanelVisible { get; set; }
 
     [ObservableProperty]
     public partial bool IsModelAvailable { get; set; }
@@ -39,6 +37,9 @@ public sealed partial class AudioViewModel(
 
     [ObservableProperty]
     public partial string StatusText { get; set; } = "";
+
+    /// <summary>The panel shows while listening and stays up afterwards to hold the last transcript.</summary>
+    public bool IsTranscriptPanelVisible => IsListening || TranscriptText.Length > 0;
 
     public async void Receive(ModelDownloadRequestedMessage message)
     {
@@ -61,9 +62,7 @@ public sealed partial class AudioViewModel(
 
         if (success)
         {
-            IsModelAvailable = true;
-            StatusText = "";
-            RegisterHotkey();
+            ApplyModelAvailability(modelPath);
         }
         else
         {
@@ -73,41 +72,13 @@ public sealed partial class AudioViewModel(
         WeakReferenceMessenger.Default.Send(new ModelDownloadCompletedMessage(success));
     }
 
-    public void Receive(AudioModelChangedMessage message)
-    {
-        IsModelAvailable = ModelDownloadService.ModelExists(message.ModelPath);
-
-        if (IsModelAvailable)
-        {
-            if (!hotkeyRegistered)
-            {
-                RegisterHotkey();
-            }
-
-            StatusText = "";
-        }
-        else
-        {
-            hotkeyService.Unregister("audio");
-            hotkeyRegistered = false;
-            StatusText = "Whisper model not found, please download by clicking the button in settings";
-        }
-    }
+    public void Receive(AudioModelChangedMessage message) => ApplyModelAvailability(message.ModelPath);
 
     public void Initialize(IntPtr windowHandle)
     {
         hwnd = windowHandle;
 
-        IsModelAvailable = ModelDownloadService.ModelExists(settingsService.Settings.Audio.ModelPath);
-        if (!IsModelAvailable)
-        {
-            StatusText = "Whisper model not found, please download by clicking the button in settings";
-        }
-
-        if (IsModelAvailable)
-        {
-            RegisterHotkey();
-        }
+        ApplyModelAvailability(settingsService.Settings.Audio.ModelPath);
 
         audioInjectorService.AudioStateChanged += OnAudioStateChanged;
         WeakReferenceMessenger.Default.Register<ModelDownloadRequestedMessage>(this);
@@ -159,7 +130,6 @@ public sealed partial class AudioViewModel(
             IsListening = e.IsListening;
             StatusText = e.Status;
             TranscriptText = e.Transcript;
-            IsTranscriptPanelVisible = e.IsListening || e.Transcript.Length > 0;
             WeakReferenceMessenger.Default.Send(new AudioRecordingChangedMessage(e.IsListening));
         });
     }
@@ -169,12 +139,27 @@ public sealed partial class AudioViewModel(
         HotkeyText = $"\u23FA {settingsService.Settings.Audio.Hotkey}";
     }
 
+    /// <summary>Points the hotkey at the model: registered once it is on disk, dropped with a hint when it is not.</summary>
+    private void ApplyModelAvailability(string modelPath)
+    {
+        IsModelAvailable = ModelDownloadService.ModelExists(modelPath);
+
+        if (IsModelAvailable)
+        {
+            StatusText = "";
+            RegisterHotkey();
+        }
+        else
+        {
+            hotkeyService.Unregister("audio");
+            StatusText = "Whisper model not found, please download by clicking the button in settings";
+        }
+    }
+
     private void RegisterHotkey()
     {
-        if (hwnd != IntPtr.Zero && hotkeyService.Register("audio", settingsService.Settings.Audio.Hotkey, hwnd, Toggle))
-        {
-            hotkeyRegistered = true;
-        }
+        // Register replaces any existing "audio" hotkey, so it is safe to call again.
+        hotkeyService.Register("audio", settingsService.Settings.Audio.Hotkey, hwnd, Toggle);
     }
 
     private void OnDownloadProgress(long downloaded, long total)

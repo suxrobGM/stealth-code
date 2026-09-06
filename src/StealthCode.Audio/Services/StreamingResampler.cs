@@ -47,11 +47,4 @@ internal sealed class StreamingResampler(int fromRate, int toRate)
         position -= input.Length;
         return count;
     }
-
-    /// <summary>Clears the interpolation state so the next packet starts a new stream.</summary>
-    public void Reset()
-    {
-        lastSample = 0f;
-        position = 0d;
-    }
 }
