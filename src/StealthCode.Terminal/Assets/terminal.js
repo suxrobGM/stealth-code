@@ -1,15 +1,15 @@
 // Injected by TerminalAssets; the ANSI palette below has no counterpart in the app theme.
-const chrome = window.__terminalTheme || {};
-const background = chrome.background || "#1a1a1a";
-const foreground = chrome.foreground || "#d4d4d4";
+const chrome = window.__terminalTheme;
+const background = chrome.background;
+const foreground = chrome.foreground;
 
 document.body.style.background = background;
 
 const toastColors = {
-  info: chrome.accent || "#10b981",
-  success: chrome.accent || "#10b981",
-  warning: chrome.warning || "#f59e0b",
-  error: chrome.danger || "#ef4444",
+  info: chrome.accent,
+  success: chrome.accent,
+  warning: chrome.warning,
+  error: chrome.danger,
 };
 
 const term = new Terminal({
@@ -178,8 +178,8 @@ function termToast(base64Json) {
 
   // textContent, not innerHTML: the text can come from a CLI error.
   host.textContent = payload.text;
-  host.style.background = chrome.panel || "#252525";
-  host.style.borderColor = chrome.border || "#333333";
+  host.style.background = chrome.panel;
+  host.style.borderColor = chrome.border;
   host.style.color = toastColors[payload.level] || toastColors.info;
   host.classList.add("visible");
 

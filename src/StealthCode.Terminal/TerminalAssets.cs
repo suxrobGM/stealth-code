@@ -10,9 +10,6 @@ public static class TerminalAssets
 
     private static readonly string[] Scripts = ["xterm.min.js", "xterm-addon-fit.min.js", "terminal.js"];
 
-    private static string? html;
-    private static TerminalTheme? builtWith;
-
     /// <summary>
     /// Origin the terminal document is served under. Nothing is ever fetched from it; the WebView only needs
     /// a base URI to resolve the document against, and an https one keeps the document a secure context so
@@ -22,20 +19,7 @@ public static class TerminalAssets
     public static Uri BaseUri { get; } = new("https://terminal.stealthcode.invalid/");
 
     /// <summary>The whole terminal — markup, styles and scripts — as one self-contained document.</summary>
-    public static string GetTerminalHtml(TerminalTheme? theme = null)
-    {
-        theme ??= TerminalTheme.Default;
-
-        if (html is null || builtWith != theme)
-        {
-            html = BuildHtml(theme);
-            builtWith = theme;
-        }
-
-        return html;
-    }
-
-    private static string BuildHtml(TerminalTheme theme)
+    public static string GetTerminalHtml(TerminalTheme theme)
     {
         var document = ReadResource("terminal.html");
 
@@ -57,22 +41,26 @@ public static class TerminalAssets
     }
 
     /// <summary>Colours terminal.js shares with the app chrome.</summary>
-    private static string ThemeScript(TerminalTheme theme) =>
-        "<script>window.__terminalTheme={"
-        + $"background:{Quote(theme.Background)},"
-        + $"foreground:{Quote(theme.Foreground)},"
-        + $"panel:{Quote(theme.Panel)},"
-        + $"border:{Quote(theme.Border)},"
-        + $"accent:{Quote(theme.Accent)},"
-        + $"warning:{Quote(theme.Warning)},"
-        + $"danger:{Quote(theme.Danger)}"
-        + "};</script>";
+    private static string ThemeScript(TerminalTheme theme)
+    {
+        var fallback = TerminalTheme.Default;
 
-    /// <summary>Drops anything that is not a plain CSS colour, since this is interpolated into a script.</summary>
-    private static string Quote(string color) =>
+        return "<script>window.__terminalTheme={"
+            + $"background:{Quote(theme.Background, fallback.Background)},"
+            + $"foreground:{Quote(theme.Foreground, fallback.Foreground)},"
+            + $"panel:{Quote(theme.Panel, fallback.Panel)},"
+            + $"border:{Quote(theme.Border, fallback.Border)},"
+            + $"accent:{Quote(theme.Accent, fallback.Accent)},"
+            + $"warning:{Quote(theme.Warning, fallback.Warning)},"
+            + $"danger:{Quote(theme.Danger, fallback.Danger)}"
+            + "};</script>";
+    }
+
+    /// <summary>Falls back to the default colour when the value is not a plain CSS one, since this is interpolated into a script.</summary>
+    private static string Quote(string color, string fallback) =>
         color.All(c => char.IsAsciiLetterOrDigit(c) || c is '#' or '(' or ')' or ',' or '.' or '%' or ' ')
             ? $"\"{color}\""
-            : "null";
+            : $"\"{fallback}\"";
 
     /// <summary>
     /// Stops an asset that happens to contain a closing tag from ending the element it is being inlined into.

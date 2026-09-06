@@ -26,6 +26,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase,
     private readonly UpdateService updateService;
 
     private bool initialized;
+    private CliProviderConfig? activeProvider;
 
     public MainWindowViewModel(
         PtyService ptyService,
@@ -60,6 +61,8 @@ public sealed partial class MainWindowViewModel : ViewModelBase,
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(CaptureCommand))]
+    [NotifyPropertyChangedFor(nameof(ActiveProvider))]
+    [NotifyPropertyChangedFor(nameof(CanCapture))]
     [NotifyPropertyChangedFor(nameof(CaptureTip))]
     public partial int SelectedProviderIndex { get; set; }
 
@@ -99,31 +102,20 @@ public sealed partial class MainWindowViewModel : ViewModelBase,
     [ObservableProperty]
     public partial bool IsUpdateAvailable { get; set; }
 
-    public string VersionText { get; } = $"v{UpdateService.CurrentVersion}";
-
     public PtyService PtyService { get; }
     public AudioViewModel Audio { get; }
     public StatusBarViewModel Status { get; }
 
     /// <summary>False for CLIs that cannot read an image.</summary>
-    public bool CanCapture => ActiveProvider?.SupportsImageInput == true;
+    public bool CanCapture => ActiveProvider.SupportsImageInput;
 
     /// <summary>Hover text. An unsupported CLI explains itself here instead of just dimming.</summary>
     public string CaptureTip => CanCapture
         ? $"Capture and send  ({CaptureHotkey})"
-        : $"{ActiveProvider?.Name ?? "This CLI"} cannot accept images";
+        : $"{ActiveProvider.Name} cannot accept images";
 
     /// <summary>Read from the index, not settings: command state updates before settings are written.</summary>
-    public CliProviderConfig ActiveProvider
-    {
-        get
-        {
-            var providers = providerRegistry.GetAllProviders();
-            return SelectedProviderIndex >= 0 && SelectedProviderIndex < providers.Count
-                ? providers[SelectedProviderIndex]
-                : providerRegistry.GetActiveProvider();
-        }
-    }
+    public CliProviderConfig ActiveProvider => activeProvider ??= ResolveActiveProvider();
 
     public void Receive(HotkeyChangedMessage message)
     {
@@ -175,6 +167,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase,
     public void Cleanup()
     {
         Audio.Cleanup();
+        hotkeys.Dispose();
         WeakReferenceMessenger.Default.UnregisterAll(this);
         PtyService.Stop();
         PtyService.Dispose();
@@ -201,20 +194,11 @@ public sealed partial class MainWindowViewModel : ViewModelBase,
     {
         IsNoFocus = !IsNoFocus;
         WeakReferenceMessenger.Default.Send(new NoFocusChangedMessage(IsNoFocus));
-        Status.Show(IsNoFocus ? "No-focus on" : "No-focus off");
+        WeakReferenceMessenger.Default.Send(new ShowToastMessage(IsNoFocus ? "No-focus on" : "No-focus off"));
     }
 
     [RelayCommand]
     private void TogglePin() => IsAlwaysOnTop = !IsAlwaysOnTop;
-
-    [RelayCommand]
-    private void ShowUpdate()
-    {
-        if (!IsSettingsVisible)
-        {
-            ToggleSettings();
-        }
-    }
 
     [RelayCommand]
     private void ToggleSettings()
@@ -248,7 +232,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase,
             return;
         }
 
-        Status.Show(CaptureTip, StatusLevel.Warning);
+        WeakReferenceMessenger.Default.Send(new ShowToastMessage(CaptureTip, StatusLevel.Warning));
     }
 
     private async Task CheckForUpdateOnStartupAsync()
@@ -269,6 +253,8 @@ public sealed partial class MainWindowViewModel : ViewModelBase,
 
     partial void OnSelectedProviderIndexChanged(int value)
     {
+        activeProvider = ResolveActiveProvider();
+
         var providers = providerRegistry.GetAllProviders();
         if (value < 0 || value >= providers.Count)
         {
@@ -297,7 +283,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase,
 
         if (initialized)
         {
-            Status.Show($"Opacity {(int)(value * 100)}%");
+            WeakReferenceMessenger.Default.Send(new ShowToastMessage($"Opacity {(int)(value * 100)}%"));
             WeakReferenceMessenger.Default.Send(new ApplyOpacityMessage(value));
         }
     }
@@ -328,5 +314,15 @@ public sealed partial class MainWindowViewModel : ViewModelBase,
         OpacityHotkey = settings.OpacityHotkey;
         NoFocusHotkey = settings.NoFocusHotkey;
         Audio.LoadFromSettings();
+
+        activeProvider = ResolveActiveProvider();
+    }
+
+    private CliProviderConfig ResolveActiveProvider()
+    {
+        var providers = providerRegistry.GetAllProviders();
+        return SelectedProviderIndex >= 0 && SelectedProviderIndex < providers.Count
+            ? providers[SelectedProviderIndex]
+            : providerRegistry.GetActiveProvider();
     }
 }

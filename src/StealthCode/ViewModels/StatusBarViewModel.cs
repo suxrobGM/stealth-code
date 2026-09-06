@@ -1,5 +1,7 @@
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Messaging;
+using StealthCode.Messages;
 using StealthCode.Models;
 
 namespace StealthCode.ViewModels;
@@ -8,7 +10,7 @@ namespace StealthCode.ViewModels;
 /// The single status line in the action bar. A transient note wins while its timer runs; otherwise whatever is
 /// still true shows through.
 /// </summary>
-public sealed partial class StatusBarViewModel : ViewModelBase
+public sealed partial class StatusBarViewModel : ViewModelBase, IRecipient<ShowToastMessage>
 {
     private static readonly TimeSpan TransientDuration = TimeSpan.FromSeconds(1.5);
 
@@ -36,6 +38,8 @@ public sealed partial class StatusBarViewModel : ViewModelBase
                 Refresh();
             }
         };
+
+        WeakReferenceMessenger.Default.Register<ShowToastMessage>(this);
     }
 
     /// <summary>Screenshots waiting to be sent.</summary>
@@ -62,8 +66,12 @@ public sealed partial class StatusBarViewModel : ViewModelBase
     private StatusLevel StandingLevel =>
         audio.StatusText.Length > 0 ? audio.StatusLevel : StatusLevel.Info;
 
+    /// <summary>Every transient notice arrives here, sometimes from a thread pool thread.</summary>
+    public void Receive(ShowToastMessage message) =>
+        Dispatcher.UIThread.Post(() => Show(message.Text, message.Level));
+
     /// <summary>Puts a line in the bar for a moment, then lets standing state show again.</summary>
-    public void Show(string text, StatusLevel level = StatusLevel.Info)
+    private void Show(string text, StatusLevel level = StatusLevel.Info)
     {
         transientText = text;
         transientLevel = level;

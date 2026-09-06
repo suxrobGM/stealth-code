@@ -18,7 +18,7 @@ public sealed class TerminalWebView : UserControl, IDisposable
     private int pendingCols;
     private int pendingRows;
 
-    private (string Message, StatusLevel Level)? pendingToast;
+    private readonly Queue<string> pendingScripts = new();
 
     private string? pendingCommand;
     private string[]? pendingArgs;
@@ -67,14 +67,20 @@ public sealed class TerminalWebView : UserControl, IDisposable
     /// <summary>Shows a notice inside the terminal document, the only surface that can float over the terminal.</summary>
     public void ShowToast(string message, StatusLevel level)
     {
-        if (webView is null || !documentLoaded)
-        {
-            // Startup toasts arrive before the document loads; hold rather than drop.
-            pendingToast = (message, level);
-            return;
-        }
+        Invoke(TerminalScripts.Toast(message, level));
+    }
 
-        webView.InvokeScript(TerminalScripts.Toast(message, level));
+    /// <summary>Runs a script once the terminal document is loaded, holding it in order until then.</summary>
+    private void Invoke(string script)
+    {
+        if (documentLoaded)
+        {
+            webView?.InvokeScript(script);
+        }
+        else
+        {
+            pendingScripts.Enqueue(script);
+        }
     }
 
     /// <summary>
@@ -119,10 +125,9 @@ public sealed class TerminalWebView : UserControl, IDisposable
             // Re-send ready in case invokeCSharpAction wasn't injected when terminal.js first ran
             webView?.InvokeScript(TerminalScripts.Ready());
 
-            if (pendingToast is { } toast)
+            while (pendingScripts.Count > 0)
             {
-                pendingToast = null;
-                ShowToast(toast.Message, toast.Level);
+                webView?.InvokeScript(pendingScripts.Dequeue());
             }
         }
     }

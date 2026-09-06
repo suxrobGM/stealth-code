@@ -20,7 +20,6 @@ public sealed class CaptureInjectorService(
 {
     private readonly List<string> pendingCaptures = [];
 
-    public bool IsMultiCaptureActive => pendingCaptures.Count > 0;
     public int PendingCount => pendingCaptures.Count;
 
     /// <summary>
@@ -31,7 +30,7 @@ public sealed class CaptureInjectorService(
     {
         if (pendingCaptures.Count > 0)
         {
-            FinalizeMultiCapture();
+            await FinalizeMultiCaptureAsync();
             return;
         }
 
@@ -44,26 +43,33 @@ public sealed class CaptureInjectorService(
 
         var capture = settingsService.Settings.Capture;
 
-        // Off the UI thread: the blit, the restore wait, and PNG encoding all block.
-        var imagePath = await Task.Run(() => screenCaptureService.Capture(capture));
+        // Off the UI thread: the blit, the restore wait, PNG encoding, and the base64 encode all block.
+        var prompt = await Task.Run<string?>(() =>
+        {
+            var imagePath = screenCaptureService.Capture(capture);
+            if (imagePath is null)
+            {
+                return null;
+            }
 
-        if (imagePath is null)
+            imagePath = imagePath.Replace('\\', '/');
+
+            return provider.ImageMode switch
+            {
+                ImageInputMode.FilePath =>
+                    $"{capture.SystemPrompt.Trim()} See the screenshot: {imagePath}",
+                ImageInputMode.Base64 =>
+                    $"{capture.SystemPrompt.Trim()} [base64:{Convert.ToBase64String(File.ReadAllBytes(imagePath))}]",
+                _ =>
+                    $"{capture.SystemPrompt.Trim()} See the screenshot: {imagePath}"
+            };
+        });
+
+        if (prompt is null)
         {
             Toast("Capture failed", StatusLevel.Error);
             return;
         }
-
-        imagePath = imagePath.Replace('\\', '/');
-
-        var prompt = provider.ImageMode switch
-        {
-            ImageInputMode.FilePath =>
-                $"{capture.SystemPrompt.Trim()} See the screenshot: {imagePath}",
-            ImageInputMode.Base64 =>
-                $"{capture.SystemPrompt.Trim()} [base64:{Convert.ToBase64String(File.ReadAllBytes(imagePath))}]",
-            _ =>
-                $"{capture.SystemPrompt.Trim()} See the screenshot: {imagePath}"
-        };
 
         _ = PromptInjector.SendAsync(pty, prompt);
     }
@@ -87,7 +93,7 @@ public sealed class CaptureInjectorService(
         Toast($"{pendingCaptures.Count} captured");
     }
 
-    private void FinalizeMultiCapture()
+    private async Task FinalizeMultiCaptureAsync()
     {
         var provider = providerRegistry.GetActiveProvider();
         if (!provider.SupportsImageInput)
@@ -102,24 +108,30 @@ public sealed class CaptureInjectorService(
         var capture = settingsService.Settings.Capture;
         var multiCaptureSystemPrompt = capture.MultiCaptureSystemPrompt.Trim();
 
-        var sb = new StringBuilder();
-        sb.AppendLine(capture.SystemPrompt.Trim()); // Include the original prompt for context
-        sb.Append(multiCaptureSystemPrompt);
-
-        for (var i = 0; i < pendingCaptures.Count; i++)
-        {
-            var path = pendingCaptures[i];
-            sb.Append(provider.ImageMode switch
-            {
-                ImageInputMode.FilePath => $" Screenshot {i + 1}: {path}",
-                ImageInputMode.Base64 => $" Screenshot {i + 1}: [base64:{Convert.ToBase64String(File.ReadAllBytes(path))}]",
-                _ => $" Screenshot {i + 1}: {path}"
-            });
-        }
-
+        string[] paths = [.. pendingCaptures];
         pendingCaptures.Clear();
 
-        var prompt = sb.ToString();
+        // Off the UI thread: reading and base64-encoding every pending PNG blocks.
+        var prompt = await Task.Run(() =>
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine(capture.SystemPrompt.Trim()); // Include the original prompt for context
+            sb.Append(multiCaptureSystemPrompt);
+
+            for (var i = 0; i < paths.Length; i++)
+            {
+                var path = paths[i];
+                sb.Append(provider.ImageMode switch
+                {
+                    ImageInputMode.FilePath => $" Screenshot {i + 1}: {path}",
+                    ImageInputMode.Base64 => $" Screenshot {i + 1}: [base64:{Convert.ToBase64String(File.ReadAllBytes(path))}]",
+                    _ => $" Screenshot {i + 1}: {path}"
+                });
+            }
+
+            return sb.ToString();
+        });
+
         _ = PromptInjector.SendAsync(pty, prompt);
     }
 

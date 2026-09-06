@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using StealthCode.Messages;
 using StealthCode.Updater.Models;
 using StealthCode.Updater.Services;
+using StealthCode.Utilities;
 
 namespace StealthCode.ViewModels.Settings;
 
@@ -93,12 +94,7 @@ public sealed partial class UpdateSettingsViewModel(UpdateService updateService)
 
     private void OnDownloadProgress(long downloaded, long total)
     {
-        if (total <= 0)
-        {
-            return;
-        }
-
-        var percent = (int)(downloaded * 100 / total);
-        Dispatcher.UIThread.Post(() => StatusText = $"Downloading... {percent}%");
+        var text = $"Downloading... {DownloadProgressText.Format(downloaded, total)}";
+        Dispatcher.UIThread.Post(() => StatusText = text);
     }
 }

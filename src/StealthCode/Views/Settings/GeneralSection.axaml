@@ -64,7 +64,7 @@
       </StackPanel>
 
       <TextBlock Classes="status danger" Text="{Binding HotkeyConflict}"
-                 IsVisible="{Binding HasHotkeyConflict}" />
+                 IsVisible="{Binding HotkeyConflict, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
     </StackPanel>
 
   </StackPanel>

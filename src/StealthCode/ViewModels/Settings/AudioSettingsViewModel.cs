@@ -49,9 +49,6 @@ public sealed partial class AudioSettingsViewModel : SettingsSectionViewModel
     [ObservableProperty]
     public partial bool IsAdvancedExpanded { get; set; }
 
-    [ObservableProperty]
-    public partial bool IsModelDownloading { get; set; }
-
     /// <summary>Feeds the download progress bar.</summary>
     [ObservableProperty]
     public partial double DownloadProgress { get; set; }
@@ -60,6 +57,9 @@ public sealed partial class AudioSettingsViewModel : SettingsSectionViewModel
     public partial string DownloadModelButtonText { get; set; } = "Download Model";
 
     public string SystemPromptPreview => PromptPreview.Of(SystemPrompt);
+
+    /// <summary>The installer owns the flag, so a download that outlives this panel still reports itself.</summary>
+    public bool IsModelDownloading => modelInstaller.IsDownloading;
 
     protected override void LoadCore()
     {
@@ -89,9 +89,10 @@ public sealed partial class AudioSettingsViewModel : SettingsSectionViewModel
     [RelayCommand]
     private async Task DownloadModel()
     {
-        IsModelDownloading = true;
         DownloadModelButtonText = "Downloading...";
-        await modelInstaller.InstallAsync();
+        var install = modelInstaller.InstallAsync();
+        OnPropertyChanged(nameof(IsModelDownloading));
+        await install;
     }
 
     private void OnDownloadProgress(long downloaded, long total)
@@ -104,13 +105,13 @@ public sealed partial class AudioSettingsViewModel : SettingsSectionViewModel
 
     private void OnDownloadCompleted(bool success)
     {
-        IsModelDownloading = false;
+        OnPropertyChanged(nameof(IsModelDownloading));
         DownloadProgress = 0;
         DownloadModelButtonText = success ? "Model ready" : "Download failed - retry";
     }
 
-    private static string ModelLabel(string modelPath) =>
-        ModelDownloadService.ModelExists(modelPath) ? "Model ready" : "Download Model";
+    private static string ModelLabel(string modelPath, string downloadText = "Download Model") =>
+        ModelDownloadService.ModelExists(modelPath) ? "Model ready" : downloadText;
 
     partial void OnSelectedModelChanged(WhisperModel? value)
     {
@@ -121,9 +122,7 @@ public sealed partial class AudioSettingsViewModel : SettingsSectionViewModel
 
         SettingsService.Settings.Audio.ModelPath = value.Path;
         Save();
-        DownloadModelButtonText = ModelDownloadService.ModelExists(value.Path)
-            ? "Model ready"
-            : $"Download ({value.SizeText})";
+        DownloadModelButtonText = ModelLabel(value.Path, $"Download ({value.SizeText})");
         WeakReferenceMessenger.Default.Send(new AudioModelChangedMessage(value.Path));
     }
 

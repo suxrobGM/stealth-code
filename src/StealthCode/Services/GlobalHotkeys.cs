@@ -8,7 +8,7 @@ namespace StealthCode.Services;
 /// Binds the app-wide hotkeys and reports the ones Windows refused. A refusal means another application already
 /// owns the combination, which otherwise looks identical to a working binding.
 /// </summary>
-public sealed class GlobalHotkeys(HotkeyService hotkeyService, SettingsService settingsService)
+public sealed class GlobalHotkeys(HotkeyService hotkeyService, SettingsService settingsService) : IDisposable
 {
     private IntPtr hwnd;
     private IReadOnlyDictionary<string, Action> actions = new Dictionary<string, Action>();
@@ -39,6 +39,9 @@ public sealed class GlobalHotkeys(HotkeyService hotkeyService, SettingsService s
     public bool Rebind(string name, string hotkey) =>
         actions.TryGetValue(name, out var callback)
         && hotkeyService.Register(name, hotkey, hwnd, callback);
+
+    /// <summary>Unregisters every binding and restores the window procedure this class replaced.</summary>
+    public void Dispose() => hotkeyService.Dispose();
 
     /// <summary>The saved combination for each binding this class owns. Audio registers its own.</summary>
     private Dictionary<string, string> SavedHotkeys()

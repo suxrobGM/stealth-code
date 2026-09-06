@@ -6,17 +6,6 @@
     <Setter Property="Background" Value="{StaticResource DividerBrush}" />
   </Style>
 
-  <!-- Recording pulse -->
-  <Style Selector="Ellipse.pulse">
-    <Style.Animations>
-      <Animation Duration="0:0:1" IterationCount="INFINITE">
-        <KeyFrame Cue="0%"><Setter Property="Opacity" Value="1.0" /></KeyFrame>
-        <KeyFrame Cue="50%"><Setter Property="Opacity" Value="0.2" /></KeyFrame>
-        <KeyFrame Cue="100%"><Setter Property="Opacity" Value="1.0" /></KeyFrame>
-      </Animation>
-    </Style.Animations>
-  </Style>
-
   <!-- Region selection overlay -->
   <Style Selector="Border.overlay-scrim">
     <Setter Property="Background" Value="{StaticResource OverlayScrimBrush}" />

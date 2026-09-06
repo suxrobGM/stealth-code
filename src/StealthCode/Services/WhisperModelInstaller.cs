@@ -10,7 +10,7 @@ public sealed class WhisperModelInstaller(
     ModelDownloadService downloadService,
     SettingsService settingsService)
 {
-    public bool IsDownloading { get; private set; }
+    public bool IsDownloading => downloadService.IsDownloading;
 
     /// <summary>Bytes downloaded and expected. Each view model formats it for its own surface.</summary>
     public event Action<long, long>? Progress;
@@ -32,7 +32,6 @@ public sealed class WhisperModelInstaller(
             return;
         }
 
-        IsDownloading = true;
         downloadService.DownloadProgress += OnProgress;
 
         try
@@ -43,7 +42,6 @@ public sealed class WhisperModelInstaller(
         finally
         {
             downloadService.DownloadProgress -= OnProgress;
-            IsDownloading = false;
         }
     }
 

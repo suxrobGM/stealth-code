@@ -63,8 +63,6 @@ public sealed partial class GeneralSettingsViewModel(SettingsService settingsSer
         }
     }
 
-    public bool HasHotkeyConflict => HotkeyConflict.Length > 0;
-
     protected override void LoadCore()
     {
         var settings = SettingsService.Settings;
@@ -98,34 +96,29 @@ public sealed partial class GeneralSettingsViewModel(SettingsService settingsSer
     {
         SettingsService.Settings.Capture.Hotkey = value;
         SaveHotkey("capture", value);
-        OnPropertyChanged(nameof(HasHotkeyConflict));
     }
 
     partial void OnMultiCaptureHotkeyChanged(string value)
     {
         SettingsService.Settings.Capture.MultiCaptureHotkey = value;
         SaveHotkey("multicapture", value);
-        OnPropertyChanged(nameof(HasHotkeyConflict));
     }
 
     partial void OnAudioHotkeyChanged(string value)
     {
         SettingsService.Settings.Audio.Hotkey = value;
         SaveHotkey("audio", value);
-        OnPropertyChanged(nameof(HasHotkeyConflict));
     }
 
     partial void OnOpacityHotkeyChanged(string value)
     {
         SettingsService.Settings.OpacityHotkey = value;
         SaveHotkey("opacity", value);
-        OnPropertyChanged(nameof(HasHotkeyConflict));
     }
 
     partial void OnNoFocusHotkeyChanged(string value)
     {
         SettingsService.Settings.NoFocusHotkey = value;
         SaveHotkey("nofocus", value);
-        OnPropertyChanged(nameof(HasHotkeyConflict));
     }
 }

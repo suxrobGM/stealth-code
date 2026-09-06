@@ -1,24 +1,22 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-  <Style Selector="Button.primary">
+  <Style Selector="Button.primary, Button.secondary">
     <Setter Property="FontSize" Value="{StaticResource FontSizeXs}" />
     <Setter Property="Height" Value="28" />
     <Setter Property="MinWidth" Value="80" />
-    <Setter Property="Background" Value="{StaticResource AccentBrush}" />
-    <Setter Property="Foreground" Value="{StaticResource OnAccentFg}" />
     <Setter Property="BorderThickness" Value="0" />
     <Setter Property="CornerRadius" Value="{StaticResource CornerRadiusSm}" />
   </Style>
 
+  <Style Selector="Button.primary">
+    <Setter Property="Background" Value="{StaticResource AccentBrush}" />
+    <Setter Property="Foreground" Value="{StaticResource OnAccentFg}" />
+  </Style>
+
   <Style Selector="Button.secondary">
-    <Setter Property="FontSize" Value="{StaticResource FontSizeXs}" />
-    <Setter Property="Height" Value="28" />
-    <Setter Property="MinWidth" Value="80" />
     <Setter Property="Background" Value="{StaticResource ControlBg}" />
     <Setter Property="Foreground" Value="{StaticResource SecondaryFg}" />
-    <Setter Property="BorderThickness" Value="0" />
-    <Setter Property="CornerRadius" Value="{StaticResource CornerRadiusSm}" />
   </Style>
 
   <!-- Action bar button; the label lives in the tooltip -->
