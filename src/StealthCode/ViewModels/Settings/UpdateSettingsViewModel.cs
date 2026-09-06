@@ -11,9 +11,6 @@ namespace StealthCode.ViewModels.Settings;
 /// <summary>Current version, update check, and the download-and-restart flow.</summary>
 public sealed partial class UpdateSettingsViewModel(UpdateService updateService) : ViewModelBase
 {
-    private const string CheckLabel = "Check for Updates";
-    private const string UpdateLabel = "Update & Restart";
-
     private GitHubRelease? pendingRelease;
 
     public string VersionText { get; } = $"v{UpdateService.CurrentVersion}";
@@ -22,45 +19,62 @@ public sealed partial class UpdateSettingsViewModel(UpdateService updateService)
     public partial string? StatusText { get; set; }
 
     [ObservableProperty]
-    public partial bool IsUpdating { get; set; }
+    public partial bool IsBusy { get; set; }
 
     [ObservableProperty]
-    public partial string ButtonText { get; set; } = CheckLabel;
+    public partial bool HasPendingRelease { get; set; }
+
+    /// <summary>Names the version and the restart.</summary>
+    [ObservableProperty]
+    public partial string InstallButtonText { get; set; } = "Install and restart";
 
     [RelayCommand]
     private async Task CheckForUpdate()
     {
-        if (IsUpdating)
+        if (IsBusy)
         {
             return;
         }
 
-        // A second press once a release is known applies it.
-        if (pendingRelease is { } release)
+        IsBusy = true;
+        StatusText = "Checking...";
+
+        try
         {
-            await ApplyUpdateAsync(release);
+            pendingRelease = await updateService.CheckForUpdateAsync();
+        }
+        catch (Exception ex)
+        {
+            StatusText = $"Could not check for updates: {ex.Message}";
             return;
         }
-
-        ButtonText = "Checking...";
-        pendingRelease = await updateService.CheckForUpdateAsync();
+        finally
+        {
+            IsBusy = false;
+        }
 
         if (pendingRelease is null)
         {
-            StatusText = "You're on the latest version";
-            ButtonText = CheckLabel;
+            StatusText = "You are on the latest version";
             return;
         }
 
-        StatusText = $"New version available: {pendingRelease.TagName}";
-        ButtonText = UpdateLabel;
+        StatusText = $"{pendingRelease.TagName} is available";
+        InstallButtonText = $"Install {pendingRelease.TagName} and restart";
+        HasPendingRelease = true;
         WeakReferenceMessenger.Default.Send(new UpdateAvailableMessage(true));
     }
 
-    private async Task ApplyUpdateAsync(GitHubRelease release)
+    [RelayCommand]
+    private async Task InstallUpdate()
     {
-        IsUpdating = true;
-        ButtonText = "Downloading...";
+        if (IsBusy || pendingRelease is not { } release)
+        {
+            return;
+        }
+
+        IsBusy = true;
+        StatusText = "Downloading...";
 
         updateService.DownloadProgress += OnDownloadProgress;
         var success = await updateService.DownloadAndApplyAsync(release);
@@ -68,13 +82,12 @@ public sealed partial class UpdateSettingsViewModel(UpdateService updateService)
 
         if (success)
         {
-            ButtonText = "Restarting...";
+            StatusText = "Restarting...";
             UpdateService.LaunchUpdateAndExit();
             return;
         }
 
-        IsUpdating = false;
-        ButtonText = UpdateLabel;
+        IsBusy = false;
         StatusText = "Update failed. Try again.";
     }
 
@@ -86,6 +99,6 @@ public sealed partial class UpdateSettingsViewModel(UpdateService updateService)
         }
 
         var percent = (int)(downloaded * 100 / total);
-        Dispatcher.UIThread.Post(() => ButtonText = $"Downloading... {percent}%");
+        Dispatcher.UIThread.Post(() => StatusText = $"Downloading... {percent}%");
     }
 }

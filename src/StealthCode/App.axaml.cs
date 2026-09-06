@@ -68,17 +68,21 @@ public partial class App : Application
         services.AddSingleton<SettingsService>();
         services.AddSingleton<CliProviderRegistry>();
         services.AddSingleton<HotkeyService>();
+        services.AddSingleton<GlobalHotkeys>();
         services.AddSingleton<CaptureInjectorService>();
         services.AddSingleton<AudioInjectorService>();
+        services.AddSingleton<WhisperModelInstaller>();
         services.AddUpdater();
 
         // ViewModels
         services.AddSingleton<AudioViewModel>();
+        services.AddSingleton<StatusBarViewModel>();
         services.AddSingleton<MainWindowViewModel>();
 
         // Settings panel
         services.AddSingleton<GeneralSettingsViewModel>();
         services.AddSingleton<CaptureSettingsViewModel>();
+        services.AddSingleton<GpuPackSettingsViewModel>();
         services.AddSingleton<AudioSettingsViewModel>();
         services.AddSingleton<UpdateSettingsViewModel>();
         services.AddSingleton<SettingsViewModel>();

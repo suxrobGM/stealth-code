@@ -4,10 +4,11 @@ using CommunityToolkit.Mvvm.Messaging;
 using StealthCode.Messages;
 using StealthCode.ScreenCapture.Models;
 using StealthCode.Services;
+using StealthCode.Utilities;
 
 namespace StealthCode.ViewModels.Settings;
 
-/// <summary>Screenshot capture mode, its target, hotkeys, and prompt.</summary>
+/// <summary>Screenshot capture mode, its target, and the two prompts. Hotkeys live in General.</summary>
 public sealed partial class CaptureSettingsViewModel(
     SettingsService settingsService,
     CliProviderRegistry providerRegistry) : SettingsSectionViewModel(settingsService),
@@ -26,13 +27,23 @@ public sealed partial class CaptureSettingsViewModel(
     public partial string SelectedWindowTitle { get; set; } = "";
 
     [ObservableProperty]
-    public partial string Hotkey { get; set; } = "Ctrl+Shift+C";
-
-    [ObservableProperty]
-    public partial string MultiCaptureHotkey { get; set; } = "Ctrl+Shift+X";
-
-    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(SystemPromptPreview))]
     public partial string SystemPrompt { get; set; } = "";
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(MultiCaptureSystemPromptPreview))]
+    public partial string MultiCaptureSystemPrompt { get; set; } = "";
+
+    // Folded away by default; they are the tallest control here.
+    [ObservableProperty]
+    public partial bool IsPromptExpanded { get; set; }
+
+    [ObservableProperty]
+    public partial bool IsMultiCapturePromptExpanded { get; set; }
+
+    public string SystemPromptPreview => PromptPreview.Of(SystemPrompt);
+
+    public string MultiCaptureSystemPromptPreview => PromptPreview.Of(MultiCaptureSystemPrompt);
 
     public bool IsRegionMode => SelectedMode == CaptureMode.Region;
 
@@ -73,9 +84,8 @@ public sealed partial class CaptureSettingsViewModel(
             ? FormatRegion(capture.RegionX, capture.RegionY, capture.RegionWidth, capture.RegionHeight)
             : "";
         SelectedWindowTitle = capture.WindowTitle;
-        Hotkey = capture.Hotkey;
-        MultiCaptureHotkey = capture.MultiCaptureHotkey;
         SystemPrompt = capture.SystemPrompt;
+        MultiCaptureSystemPrompt = capture.MultiCaptureSystemPrompt;
 
         WeakReferenceMessenger.Default.Register<RegionSelectedMessage>(this);
         WeakReferenceMessenger.Default.Register<WindowSelectedMessage>(this);
@@ -95,27 +105,31 @@ public sealed partial class CaptureSettingsViewModel(
     [RelayCommand]
     private void ResetPrompt() => SystemPrompt = providerRegistry.GetActiveProvider().DefaultSystemPrompt;
 
+    [RelayCommand]
+    private void ResetMultiCapturePrompt() =>
+        MultiCaptureSystemPrompt = new CaptureSettings().MultiCaptureSystemPrompt;
+
+    [RelayCommand]
+    private void TogglePrompt() => IsPromptExpanded = !IsPromptExpanded;
+
+    [RelayCommand]
+    private void ToggleMultiCapturePrompt() => IsMultiCapturePromptExpanded = !IsMultiCapturePromptExpanded;
+
     partial void OnSelectedModeChanged(CaptureMode value)
     {
         SettingsService.Settings.Capture.Mode = value;
         Save();
     }
 
-    partial void OnHotkeyChanged(string value)
-    {
-        SettingsService.Settings.Capture.Hotkey = value;
-        SaveHotkey("capture", value);
-    }
-
-    partial void OnMultiCaptureHotkeyChanged(string value)
-    {
-        SettingsService.Settings.Capture.MultiCaptureHotkey = value;
-        SaveHotkey("multicapture", value);
-    }
-
     partial void OnSystemPromptChanged(string value)
     {
         SettingsService.Settings.Capture.SystemPrompt = value;
+        Save();
+    }
+
+    partial void OnMultiCaptureSystemPromptChanged(string value)
+    {
+        SettingsService.Settings.Capture.MultiCaptureSystemPrompt = value;
         Save();
     }
 }

@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Threading;
 using Avalonia.VisualTree;
 using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,7 +22,8 @@ public sealed partial class MainWindow : Window,
     IRecipient<ApplyOpacityMessage>,
     IRecipient<NoFocusChangedMessage>,
     IRecipient<RequestRegionSelectionMessage>,
-    IRecipient<RequestWindowSelectionMessage>
+    IRecipient<RequestWindowSelectionMessage>,
+    IRecipient<ShowToastMessage>
 {
     private readonly MainWindowViewModel viewModel;
 
@@ -44,6 +46,12 @@ public sealed partial class MainWindow : Window,
     public void Receive(NoFocusChangedMessage message)
     {
         WindowNoFocusUtils.Apply(this, message.IsNoFocus);
+    }
+
+    /// <summary>Toasts can be raised from a thread pool thread, so the UI hop belongs here.</summary>
+    public void Receive(ShowToastMessage message)
+    {
+        Dispatcher.UIThread.Post(() => Terminal.ShowToast(message.Text, message.Level));
     }
 
     public void Receive(FallbackToShellMessage message)
@@ -85,8 +93,11 @@ public sealed partial class MainWindow : Window,
 
     private void OnWindowOpened(object? sender, EventArgs e)
     {
-#if !DEBUG
-        ContentProtectionService.EnableProtection(this);
+#if DEBUG
+        // Protection is off in DEBUG; the badge says so.
+        viewModel.IsProtected = false;
+#else
+        viewModel.IsProtected = ContentProtectionService.EnableProtection(this);
 #endif
 
         WeakReferenceMessenger.Default.Register<SwitchTerminalMessage>(this);
@@ -95,10 +106,11 @@ public sealed partial class MainWindow : Window,
         WeakReferenceMessenger.Default.Register<NoFocusChangedMessage>(this);
         WeakReferenceMessenger.Default.Register<RequestRegionSelectionMessage>(this);
         WeakReferenceMessenger.Default.Register<RequestWindowSelectionMessage>(this);
+        WeakReferenceMessenger.Default.Register<ShowToastMessage>(this);
 
         Terminal.Initialize(viewModel.PtyService);
 
-        var provider = viewModel.GetActiveProvider();
+        var provider = viewModel.ActiveProvider;
         Terminal.StartProcess(provider.Command, provider.Args, Environment.CurrentDirectory);
 
         var hwnd = TryGetPlatformHandle()?.Handle ?? IntPtr.Zero;

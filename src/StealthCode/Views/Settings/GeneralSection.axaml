@@ -5,39 +5,67 @@
              x:Class="StealthCode.Views.Settings.GeneralSection"
              x:DataType="vm:GeneralSettingsViewModel">
 
-  <StackPanel Spacing="8">
-    <TextBlock Classes="section-header" Text="GENERAL" />
+  <StackPanel Spacing="16">
 
-    <StackPanel Spacing="4">
-      <TextBlock Classes="field-label" Text="Provider" />
-      <ComboBox Classes="form-input"
-                ItemsSource="{Binding ProviderNames}"
-                SelectedIndex="{Binding SelectedProviderIndex}" />
+    <!-- Matches what the opacity hotkey cycles -->
+    <StackPanel Spacing="6">
+      <TextBlock Classes="field-label" Text="Opacity" />
+      <StackPanel Orientation="Horizontal" Spacing="6">
+        <Button Classes="chip" Classes.selected="{Binding IsFullOpacity}" Content="100%"
+                Command="{Binding SetOpacityCommand}">
+          <Button.CommandParameter><x:Double>1.0</x:Double></Button.CommandParameter>
+        </Button>
+        <Button Classes="chip" Classes.selected="{Binding IsHighOpacity}" Content="80%"
+                Command="{Binding SetOpacityCommand}">
+          <Button.CommandParameter><x:Double>0.8</x:Double></Button.CommandParameter>
+        </Button>
+        <Button Classes="chip" Classes.selected="{Binding IsMediumOpacity}" Content="60%"
+                Command="{Binding SetOpacityCommand}">
+          <Button.CommandParameter><x:Double>0.6</x:Double></Button.CommandParameter>
+        </Button>
+        <Button Classes="chip" Classes.selected="{Binding IsLowOpacity}" Content="40%"
+                Command="{Binding SetOpacityCommand}">
+          <Button.CommandParameter><x:Double>0.4</x:Double></Button.CommandParameter>
+        </Button>
+      </StackPanel>
     </StackPanel>
 
-    <StackPanel Spacing="4">
-      <DockPanel>
-        <TextBlock Classes="field-label" DockPanel.Dock="Left" Text="Opacity"
-                   VerticalAlignment="Center" />
-        <TextBlock Classes="field-label" DockPanel.Dock="Right"
-                   VerticalAlignment="Center" HorizontalAlignment="Right"
-                   Text="{Binding OpacityValueText}" />
-      </DockPanel>
-      <Slider Minimum="0.1" Maximum="1.0"
-              TickFrequency="0.05" IsSnapToTickEnabled="True"
-              Value="{Binding Opacity}" />
+    <Border Classes="divider" />
+
+    <!-- All five together: they share one global namespace -->
+    <StackPanel Spacing="8">
+      <TextBlock Classes="section-header" Text="SHORTCUTS" />
+
+      <StackPanel Spacing="4">
+        <TextBlock Classes="field-label" Text="Capture and send" />
+        <controls:HotkeyTextBox Hotkey="{Binding CaptureHotkey, Mode=TwoWay}" />
+      </StackPanel>
+
+      <StackPanel Spacing="4">
+        <TextBlock Classes="field-label" Text="Add to batch" />
+        <controls:HotkeyTextBox Hotkey="{Binding MultiCaptureHotkey, Mode=TwoWay}" />
+      </StackPanel>
+
+      <StackPanel Spacing="4">
+        <TextBlock Classes="field-label" Text="Listen" />
+        <controls:HotkeyTextBox Hotkey="{Binding AudioHotkey, Mode=TwoWay}" />
+      </StackPanel>
+
+      <StackPanel Spacing="4">
+        <TextBlock Classes="field-label" Text="Cycle opacity" />
+        <controls:HotkeyTextBox Hotkey="{Binding OpacityHotkey, Mode=TwoWay}" />
+      </StackPanel>
+
+      <StackPanel Spacing="4">
+        <TextBlock Classes="field-label" Text="No-focus mode" />
+        <controls:HotkeyTextBox Hotkey="{Binding NoFocusHotkey, Mode=TwoWay}" />
+        <TextBlock Classes="field-hint"
+                   Text="Keeps the window from stealing focus when clicked, so your browser stays active" />
+      </StackPanel>
+
+      <TextBlock Classes="status danger" Text="{Binding HotkeyConflict}"
+                 IsVisible="{Binding HasHotkeyConflict}" />
     </StackPanel>
 
-    <StackPanel Spacing="4">
-      <TextBlock Classes="field-label" Text="Opacity Hotkey" />
-      <controls:HotkeyTextBox Hotkey="{Binding OpacityHotkey, Mode=TwoWay}" />
-    </StackPanel>
-
-    <StackPanel Spacing="4">
-      <TextBlock Classes="field-label" Text="No-Focus Mode" />
-      <controls:HotkeyTextBox Hotkey="{Binding NoFocusHotkey, Mode=TwoWay}" />
-      <TextBlock Classes="field-hint"
-                 Text="Prevents this window from stealing focus when clicked, keeping your browser active" />
-    </StackPanel>
   </StackPanel>
 </UserControl>

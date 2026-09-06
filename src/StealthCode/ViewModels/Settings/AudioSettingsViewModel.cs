@@ -1,4 +1,3 @@
-using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -10,23 +9,25 @@ using StealthCode.Utilities;
 
 namespace StealthCode.ViewModels.Settings;
 
-/// <summary>Audio hotkey, Whisper model, GPU pack, and prompt.</summary>
-public sealed partial class AudioSettingsViewModel : SettingsSectionViewModel,
-    IRecipient<ModelDownloadCompletedMessage>
+/// <summary>Whisper model, end-of-utterance pause, and prompt. The GPU pack lives in <see cref="Gpu"/>.</summary>
+public sealed partial class AudioSettingsViewModel : SettingsSectionViewModel
 {
-    private readonly GpuPackService gpuPackService;
+    private readonly WhisperModelInstaller modelInstaller;
 
-    public AudioSettingsViewModel(SettingsService settingsService, GpuPackService gpuPackService)
-        : base(settingsService)
+    public AudioSettingsViewModel(
+        SettingsService settingsService,
+        WhisperModelInstaller modelInstaller,
+        GpuPackSettingsViewModel gpu) : base(settingsService)
     {
-        this.gpuPackService = gpuPackService;
+        this.modelInstaller = modelInstaller;
+        Gpu = gpu;
 
-        // Registered for the lifetime of the view model: a download outlives the open settings panel.
-        WeakReferenceMessenger.Default.Register<ModelDownloadCompletedMessage>(this);
+        // Subscribed for the lifetime of the view model: a download outlives the open settings panel.
+        modelInstaller.Progress += OnDownloadProgress;
+        modelInstaller.Completed += OnDownloadCompleted;
     }
 
-    [ObservableProperty]
-    public partial string Hotkey { get; set; } = "Ctrl+Shift+A";
+    public GpuPackSettingsViewModel Gpu { get; }
 
     [ObservableProperty]
     public partial WhisperModel? SelectedModel { get; set; }
@@ -38,142 +39,78 @@ public sealed partial class AudioSettingsViewModel : SettingsSectionViewModel,
     public partial double EndOfUtteranceSeconds { get; set; } = 1.8;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(SystemPromptPreview))]
     public partial string SystemPrompt { get; set; } = "";
+
+    [ObservableProperty]
+    public partial bool IsPromptExpanded { get; set; }
+
+    /// <summary>Language, runtime and pack management: configured once, if ever.</summary>
+    [ObservableProperty]
+    public partial bool IsAdvancedExpanded { get; set; }
 
     [ObservableProperty]
     public partial bool IsModelDownloading { get; set; }
 
+    /// <summary>Feeds the download progress bar.</summary>
+    [ObservableProperty]
+    public partial double DownloadProgress { get; set; }
+
     [ObservableProperty]
     public partial string DownloadModelButtonText { get; set; } = "Download Model";
 
-    /// <summary>Runtime Whisper should use, whether or not its pack is installed.</summary>
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasGpuPack))]
-    public partial GpuBackend SelectedGpuBackend { get; set; }
-
-    [ObservableProperty]
-    public partial string? GpuPackStatusText { get; set; }
-
-    [ObservableProperty]
-    public partial string GpuPackButtonText { get; set; } = "Install";
-
-    [ObservableProperty]
-    public partial bool IsGpuPackBusy { get; set; }
-
-    /// <summary>Whether the selected backend needs a pack, and so has buttons to show.</summary>
-    public bool HasGpuPack => SelectedPack is not null;
-
-    private GpuPack? SelectedPack => GpuPackCatalog.Resolve(SelectedGpuBackend);
-
-    public void Receive(ModelDownloadCompletedMessage message)
-    {
-        IsModelDownloading = false;
-        DownloadModelButtonText = message.Success ? "Downloaded" : "Download Model";
-    }
+    public string SystemPromptPreview => PromptPreview.Of(SystemPrompt);
 
     protected override void LoadCore()
     {
         var audio = SettingsService.Settings.Audio;
 
-        Hotkey = audio.Hotkey;
         SelectedModel = WhisperModelCatalog.Resolve(audio.ModelPath);
         Language = audio.Language;
         EndOfUtteranceSeconds = audio.EndOfUtteranceMs / 1000.0;
         SystemPrompt = audio.SystemPrompt;
-        SelectedGpuBackend = audio.GpuBackend;
-        DownloadModelButtonText = ModelDownloadService.ModelExists(audio.ModelPath)
-            ? "Model ready"
-            : "Download Model";
+        DownloadModelButtonText = ModelLabel(audio.ModelPath);
 
-        GpuPackStatusText = RefreshGpuPackButton();
+        Gpu.Load();
     }
 
     [RelayCommand]
     private void ResetPrompt() => SystemPrompt = new AudioSettings().SystemPrompt;
 
     [RelayCommand]
-    private void DownloadModel()
+    private void TogglePrompt() => IsPromptExpanded = !IsPromptExpanded;
+
+    [RelayCommand]
+    private void ToggleAdvanced() => IsAdvancedExpanded = !IsAdvancedExpanded;
+
+    [RelayCommand]
+    private void CancelModelDownload() => modelInstaller.Cancel();
+
+    [RelayCommand]
+    private async Task DownloadModel()
     {
-        var modelPath = SettingsService.Settings.Audio.ModelPath;
-
-        if (ModelDownloadService.ModelExists(modelPath))
-        {
-            DownloadModelButtonText = "Model already exists";
-            return;
-        }
-
         IsModelDownloading = true;
         DownloadModelButtonText = "Downloading...";
-        WeakReferenceMessenger.Default.Send(new ModelDownloadRequestedMessage(modelPath));
+        await modelInstaller.InstallAsync();
     }
 
-    /// <summary>Installs or removes the pack for the selected backend.</summary>
-    [RelayCommand]
-    private async Task ToggleGpuPack()
+    private void OnDownloadProgress(long downloaded, long total)
     {
-        if (SelectedPack is not { } pack)
+        if (total > 0)
         {
-            return;
-        }
-
-        if (pack.IsInstalled())
-        {
-            var removed = gpuPackService.Remove(pack);
-            var status = RefreshGpuPackButton();
-            GpuPackStatusText = removed ? status : "In use right now. It will go on the next launch.";
-            return;
-        }
-
-        IsGpuPackBusy = true;
-        GpuPackStatusText = "Starting download...";
-        gpuPackService.Progress += OnGpuPackProgress;
-
-        try
-        {
-            var message = await gpuPackService.InstallAsync(pack);
-            RefreshGpuPackButton();
-
-            // Show the actual result, which the status line above only guessed at.
-            GpuPackStatusText = message;
-        }
-        finally
-        {
-            gpuPackService.Progress -= OnGpuPackProgress;
-            IsGpuPackBusy = false;
+            DownloadProgress = downloaded * 100.0 / total;
         }
     }
 
-    [RelayCommand]
-    private void CancelGpuPack() => gpuPackService.Cancel();
-
-    /// <summary>Points the install button at the selected pack, and returns the matching status line.</summary>
-    private string? RefreshGpuPackButton()
+    private void OnDownloadCompleted(bool success)
     {
-        if (SelectedPack is not { } pack)
-        {
-            return null;
-        }
-
-        var installed = pack.IsInstalled();
-        GpuPackButtonText = installed ? "Remove" : $"Download {pack.SizeText}";
-
-        return installed
-            ? $"{pack.DisplayName} is installed."
-            : $"{pack.DisplayName} needs a {pack.SizeText} download.";
+        IsModelDownloading = false;
+        DownloadProgress = 0;
+        DownloadModelButtonText = success ? "Model ready" : "Download failed - retry";
     }
 
-    private void OnGpuPackProgress(long downloaded, long total)
-    {
-        // Format off the UI thread so the post carries only the finished string.
-        var text = $"Downloading... {DownloadProgressText.Format(downloaded, total)}";
-        Dispatcher.UIThread.Post(() => GpuPackStatusText = text);
-    }
-
-    partial void OnHotkeyChanged(string value)
-    {
-        SettingsService.Settings.Audio.Hotkey = value;
-        SaveHotkey("audio", value);
-    }
+    private static string ModelLabel(string modelPath) =>
+        ModelDownloadService.ModelExists(modelPath) ? "Model ready" : "Download Model";
 
     partial void OnSelectedModelChanged(WhisperModel? value)
     {
@@ -216,17 +153,5 @@ public sealed partial class AudioSettingsViewModel : SettingsSectionViewModel,
     {
         SettingsService.Settings.Audio.SystemPrompt = value;
         Save();
-    }
-
-    partial void OnSelectedGpuBackendChanged(GpuBackend value)
-    {
-        if (IsLoading)
-        {
-            return;
-        }
-
-        SettingsService.Settings.Audio.GpuBackend = value;
-        Save();
-        GpuPackStatusText = RefreshGpuPackButton();
     }
 }

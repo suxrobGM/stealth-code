@@ -4,17 +4,26 @@
              x:Class="StealthCode.Views.Settings.UpdateSection"
              x:DataType="vm:UpdateSettingsViewModel">
 
-  <StackPanel Spacing="8">
-    <TextBlock Classes="section-header" Text="UPDATES" />
+  <StackPanel Spacing="6">
+    <Border Classes="divider" />
 
-    <TextBlock Classes="field-label" Text="{Binding VersionText}" />
+    <DockPanel>
+      <TextBlock DockPanel.Dock="Left" Classes="bar-text" Text="{Binding VersionText}" />
+      <Button DockPanel.Dock="Right" Classes="link" HorizontalAlignment="Right"
+              Content="Check for updates"
+              Command="{Binding CheckForUpdateCommand}"
+              IsEnabled="{Binding !IsBusy}"
+              IsVisible="{Binding !HasPendingRelease}" />
+    </DockPanel>
 
-    <TextBlock Classes="status-text" Text="{Binding StatusText}"
+    <TextBlock Classes="status" Text="{Binding StatusText}"
                IsVisible="{Binding StatusText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
 
-    <Button Classes="form-button"
-            Command="{Binding CheckForUpdateCommand}"
-            IsEnabled="{Binding !IsUpdating}"
-            Content="{Binding ButtonText}" />
+    <!-- Applying exits the process -->
+    <Button Classes="form-button" HorizontalAlignment="Stretch"
+            Content="{Binding InstallButtonText}"
+            Command="{Binding InstallUpdateCommand}"
+            IsEnabled="{Binding !IsBusy}"
+            IsVisible="{Binding HasPendingRelease}" />
   </StackPanel>
 </UserControl>

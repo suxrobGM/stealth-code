@@ -1,23 +1,16 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:StealthCode.ViewModels.Settings"
-             xmlns:controls="using:StealthCode.Controls"
              xmlns:audio="using:StealthCode.Audio.Models"
              xmlns:audioSvc="using:StealthCode.Audio.Services"
              x:Class="StealthCode.Views.Settings.AudioSection"
              x:DataType="vm:AudioSettingsViewModel">
 
-  <StackPanel Spacing="8">
-    <TextBlock Classes="section-header" Text="AUDIO CAPTURE" />
+  <StackPanel Spacing="12">
 
     <StackPanel Spacing="4">
-      <TextBlock Classes="field-label" Text="Hotkey" />
-      <controls:HotkeyTextBox Hotkey="{Binding Hotkey, Mode=TwoWay}" />
-    </StackPanel>
-
-    <StackPanel Spacing="4">
-      <TextBlock Classes="field-label" Text="Whisper Model" />
-      <ComboBox Classes="form-input"
+      <TextBlock Classes="field-label" Text="Model" />
+      <ComboBox Classes="form-input" HorizontalAlignment="Stretch"
                 ItemsSource="{x:Static audioSvc:WhisperModelCatalog.All}"
                 SelectedItem="{Binding SelectedModel}">
         <ComboBox.ItemTemplate>
@@ -26,19 +19,18 @@
           </DataTemplate>
         </ComboBox.ItemTemplate>
       </ComboBox>
+
       <Button Classes="form-button"
               Command="{Binding DownloadModelCommand}"
               IsEnabled="{Binding !IsModelDownloading}"
               Content="{Binding DownloadModelButtonText}" />
-      <TextBlock Classes="field-hint"
-                 Text="Runs on the CPU by default; base is the fastest usable model there. With a GPU pack installed, large-v3-turbo q5 gives the best accuracy." />
-    </StackPanel>
 
-    <StackPanel Spacing="4">
-      <TextBlock Classes="field-label" Text="Language" />
-      <TextBox Classes="form-input" Text="{Binding Language}" />
-      <TextBlock Classes="field-hint"
-                 Text="Two-letter code such as en, de, ru. Use auto to detect per chunk (slower)." />
+      <StackPanel Spacing="4" IsVisible="{Binding IsModelDownloading}">
+        <ProgressBar Minimum="0" Maximum="100" Height="4"
+                     Value="{Binding DownloadProgress}" />
+        <Button Classes="form-button compact" Content="Cancel"
+                Command="{Binding CancelModelDownloadCommand}" />
+      </StackPanel>
     </StackPanel>
 
     <StackPanel Spacing="4">
@@ -52,46 +44,78 @@
       <Slider Minimum="1.0" Maximum="4.0"
               TickFrequency="0.1" IsSnapToTickEnabled="True"
               Value="{Binding EndOfUtteranceSeconds}" />
-      <TextBlock Classes="field-hint"
-                 Text="Silence after speech before the transcript is sent to the CLI." />
-    </StackPanel>
-
-    <StackPanel Spacing="4">
-      <TextBlock Classes="field-label" Text="Run Whisper On" />
-      <ComboBox Classes="form-input"
-                SelectedValue="{Binding SelectedGpuBackend}"
-                SelectedValueBinding="{Binding Tag, x:DataType=ComboBoxItem}">
-        <ComboBoxItem Content="CPU" Tag="{x:Static audio:GpuBackend.None}" />
-        <ComboBoxItem Content="Vulkan - any graphics card" Tag="{x:Static audio:GpuBackend.Vulkan}" />
-        <ComboBoxItem Content="NVIDIA CUDA 13" Tag="{x:Static audio:GpuBackend.Cuda}" />
-        <ComboBoxItem Content="NVIDIA CUDA 12 - older drivers and cards" Tag="{x:Static audio:GpuBackend.Cuda12}" />
-      </ComboBox>
-
-      <TextBlock Classes="field-hint"
-                 Text="GPU packs download once on demand and apply on the next launch. Falls back to the CPU if one cannot load." />
-
-      <TextBlock Classes="status-text" Text="{Binding GpuPackStatusText}"
-                 IsVisible="{Binding GpuPackStatusText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
-
-      <StackPanel Orientation="Horizontal" Spacing="6" IsVisible="{Binding HasGpuPack}">
-        <Button Classes="form-button"
-                Command="{Binding ToggleGpuPackCommand}"
-                Content="{Binding GpuPackButtonText}"
-                IsEnabled="{Binding !IsGpuPackBusy}" />
-
-        <Button Classes="form-button" Content="Cancel"
-                Command="{Binding CancelGpuPackCommand}"
-                IsVisible="{Binding IsGpuPackBusy}" />
-      </StackPanel>
+      <TextBlock Classes="field-hint" Text="Silence after speech before the transcript is sent to the CLI." />
     </StackPanel>
 
     <StackPanel Spacing="4">
       <TextBlock Classes="field-label" Text="Prompt" />
-      <TextBox Classes="form-input" Height="80"
-               AcceptsReturn="True" TextWrapping="Wrap"
-               Text="{Binding SystemPrompt}" />
-      <Button Classes="form-button compact" Content="Reset to Default"
-              Command="{Binding ResetPromptCommand}" />
+      <Button Classes="disclosure" Command="{Binding TogglePromptCommand}"
+              Content="{Binding SystemPromptPreview}"
+              IsVisible="{Binding !IsPromptExpanded}" />
+      <StackPanel Spacing="4" IsVisible="{Binding IsPromptExpanded}">
+        <TextBox Classes="form-input" Height="90"
+                 AcceptsReturn="True" TextWrapping="Wrap"
+                 Text="{Binding SystemPrompt}" />
+        <StackPanel Orientation="Horizontal" Spacing="6">
+          <Button Classes="form-button compact" Content="Reset to Default"
+                  Command="{Binding ResetPromptCommand}" />
+          <Button Classes="form-button compact" Content="Collapse"
+                  Command="{Binding TogglePromptCommand}" />
+        </StackPanel>
+      </StackPanel>
     </StackPanel>
+
+    <Border Classes="divider" />
+
+    <!-- Configured once, if ever -->
+    <StackPanel Spacing="8">
+      <Button Classes="disclosure" Command="{Binding ToggleAdvancedCommand}" Content="Advanced" />
+
+      <StackPanel Spacing="12" IsVisible="{Binding IsAdvancedExpanded}">
+
+        <StackPanel Spacing="4">
+          <TextBlock Classes="field-label" Text="Language" />
+          <TextBox Classes="form-input" Text="{Binding Language}" />
+          <TextBlock Classes="field-hint"
+                     Text="Two-letter code such as en, de, ru. Use auto to detect per chunk (slower)." />
+        </StackPanel>
+
+        <StackPanel Spacing="4">
+          <TextBlock Classes="field-label" Text="Run Whisper on" />
+          <ComboBox Classes="form-input" HorizontalAlignment="Stretch"
+                    SelectedValue="{Binding Gpu.SelectedBackend}"
+                    SelectedValueBinding="{Binding Tag, x:DataType=ComboBoxItem}">
+            <ComboBoxItem Content="CPU" Tag="{x:Static audio:GpuBackend.None}" />
+            <ComboBoxItem Content="Vulkan - any graphics card" Tag="{x:Static audio:GpuBackend.Vulkan}" />
+            <ComboBoxItem Content="NVIDIA CUDA 13" Tag="{x:Static audio:GpuBackend.Cuda}" />
+            <ComboBoxItem Content="NVIDIA CUDA 12 - older drivers and cards" Tag="{x:Static audio:GpuBackend.Cuda12}" />
+          </ComboBox>
+          <TextBlock Classes="field-hint"
+                     Text="GPU packs download once on demand and apply on the next launch. Falls back to the CPU if one cannot load." />
+
+          <TextBlock Classes="status" Text="{Binding Gpu.StatusText}"
+                     IsVisible="{Binding Gpu.StatusText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+
+          <!-- Install and Remove are separate buttons -->
+          <StackPanel Orientation="Horizontal" Spacing="6" IsVisible="{Binding Gpu.HasPack}">
+            <Button Classes="form-button" Content="{Binding Gpu.ButtonText}"
+                    Command="{Binding Gpu.InstallCommand}"
+                    IsEnabled="{Binding !Gpu.IsBusy}"
+                    IsVisible="{Binding !Gpu.IsInstalled}" />
+
+            <Button Classes="form-button" Content="Remove"
+                    Command="{Binding Gpu.RemoveCommand}"
+                    IsEnabled="{Binding !Gpu.IsBusy}"
+                    IsVisible="{Binding Gpu.IsInstalled}" />
+
+            <Button Classes="form-button" Content="Cancel"
+                    Command="{Binding Gpu.CancelCommand}"
+                    IsVisible="{Binding Gpu.IsBusy}" />
+          </StackPanel>
+        </StackPanel>
+
+      </StackPanel>
+    </StackPanel>
+
   </StackPanel>
 </UserControl>

@@ -1,0 +1,60 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:StealthCode.ViewModels"
+             x:Class="StealthCode.Views.ActionBar"
+             x:DataType="vm:MainWindowViewModel"
+             Background="{StaticResource WindowBg}">
+
+  <!-- Every action is reachable here as well as by hotkey; the hotkeys live in the tooltips. -->
+  <DockPanel Margin="8,0">
+
+    <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="2"
+                VerticalAlignment="Center">
+
+      <Button Classes="action" Content="{StaticResource IconCapture}"
+              Command="{Binding CaptureCommand}"
+              ToolTip.Tip="{Binding CaptureTip}" />
+
+      <Button Classes="action" Classes.active="{Binding Status.HasPendingCaptures}"
+              Content="{StaticResource IconMulti}"
+              Command="{Binding MultiCaptureCommand}"
+              ToolTip.Tip="{Binding MultiCaptureHotkey, StringFormat='Add a screenshot to the batch  ({0})'}" />
+
+      <Button Classes="action" Classes.active="{Binding Audio.IsListening}"
+              Content="{StaticResource IconListen}"
+              Command="{Binding Audio.ToggleCommand}"
+              ToolTip.Tip="{Binding Audio.Hotkey, StringFormat='Listen and transcribe  ({0})'}" />
+
+      <Button Classes="action" Content="{StaticResource IconOpacity}"
+              Command="{Binding CycleOpacityCommand}"
+              ToolTip.Tip="{Binding OpacityHotkey, StringFormat='Cycle window opacity  ({0})'}" />
+
+      <Button Classes="action" Classes.active="{Binding IsNoFocus}"
+              Content="{StaticResource IconNoFocus}"
+              Command="{Binding ToggleNoFocusCommand}"
+              ToolTip.Tip="{Binding NoFocusHotkey, StringFormat='Do not steal focus when clicked  ({0})'}" />
+
+    </StackPanel>
+
+    <!-- Declared before the status slot so the slot takes the remaining space -->
+    <Panel DockPanel.Dock="Right" VerticalAlignment="Center">
+      <Button Classes="action" Content="{StaticResource IconSettings}"
+              Command="{Binding ToggleSettingsCommand}"
+              ToolTip.Tip="Settings" />
+      <Ellipse Width="5" Height="5" Margin="0,3,3,0"
+               HorizontalAlignment="Right" VerticalAlignment="Top"
+               Fill="{StaticResource AccentBrush}"
+               IsVisible="{Binding IsUpdateAvailable}"
+               ToolTip.Tip="An update is available" />
+    </Panel>
+
+    <!-- Empty at rest -->
+    <TextBlock Classes="bar-text"
+               Classes.warning="{Binding Status.IsWarning}"
+               Classes.danger="{Binding Status.IsError}"
+               Margin="10,0"
+               TextTrimming="CharacterEllipsis"
+               Text="{Binding Status.Text}" />
+
+  </DockPanel>
+</UserControl>

@@ -1,10 +1,10 @@
+using StealthCode.Models;
 using StealthCode.ScreenCapture.Models;
 
 namespace StealthCode.Messages;
 
 // Settings panel -> MainWindowViewModel
 public sealed record OpacityChangedMessage(double Opacity);
-public sealed record SettingsProviderChangedMessage(int Index);
 
 // MainWindowViewModel -> View
 public sealed record SwitchTerminalMessage(CliProviderConfig Provider);
@@ -24,13 +24,11 @@ public sealed record AudioRecordingChangedMessage(bool IsListening);
 // MainWindowViewModel -> View: no-focus mode changed
 public sealed record NoFocusChangedMessage(bool IsNoFocus);
 
-// CaptureInjectorService -> MainWindowViewModel: multi-capture state changed
-public sealed record MultiCaptureChangedMessage(bool IsActive, int Count);
-
-// Settings panel <-> AudioViewModel: Whisper model download
-public sealed record ModelDownloadRequestedMessage(string ModelPath);
-public sealed record ModelDownloadCompletedMessage(bool Success);
+// Settings panel -> AudioViewModel: the chosen Whisper model changed
 public sealed record AudioModelChangedMessage(string ModelPath);
+
+// Anything -> MainWindow: transient notice over the terminal
+public sealed record ShowToastMessage(string Text, StatusLevel Level = StatusLevel.Info);
 
 // Update notifications
 public sealed record UpdateAvailableMessage(bool Available);

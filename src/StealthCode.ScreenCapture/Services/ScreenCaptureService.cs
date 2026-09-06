@@ -6,36 +6,40 @@ namespace StealthCode.ScreenCapture.Services;
 
 public sealed partial class ScreenCaptureService
 {
-    public string Capture(CaptureSettings settings)
+    /// <summary>Returns the PNG path, or null if the handle no longer resolves or has no area.</summary>
+    public string? Capture(CaptureSettings settings)
     {
         Directory.CreateDirectory(CapturePaths.Captures);
         var filePath = Path.Combine(
             CapturePaths.Captures, $"{CapturePaths.CapturePrefix}{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}.png");
 
-        switch (settings.Mode)
+        var captured = settings.Mode switch
         {
-            case CaptureMode.Window when settings.WindowHandle is not 0:
-                CaptureWindow(filePath, settings.WindowHandle);
-                break;
-            case CaptureMode.Region when settings is { RegionWidth: > 0, RegionHeight: > 0 }:
-                CaptureRect(filePath, settings.RegionX, settings.RegionY, settings.RegionWidth, settings.RegionHeight);
-                break;
-            default:
-                CaptureRect(filePath, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
-                break;
-        }
+            CaptureMode.Window when settings.WindowHandle is not 0 =>
+                CaptureWindow(filePath, settings.WindowHandle),
+            CaptureMode.Region when settings is { RegionWidth: > 0, RegionHeight: > 0 } =>
+                CaptureRect(filePath, settings.RegionX, settings.RegionY, settings.RegionWidth, settings.RegionHeight),
+            _ =>
+                CaptureRect(filePath, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN))
+        };
 
-        return filePath;
+        return captured ? filePath : null;
     }
 
-    private static void CaptureRect(string filePath, int x, int y, int width, int height)
+    private static bool CaptureRect(string filePath, int x, int y, int width, int height)
     {
+        if (width <= 0 || height <= 0)
+        {
+            return false;
+        }
+
         var hdcScreen = GetDC(IntPtr.Zero);
         try
         {
             using var bmp = GdiBitmap.Create(hdcScreen, width, height);
             BitBlt(bmp.Hdc, 0, 0, width, height, hdcScreen, x, y, SRCCOPY);
             bmp.SaveAsPng(filePath);
+            return true;
         }
         finally
         {
@@ -43,11 +47,11 @@ public sealed partial class ScreenCaptureService
         }
     }
 
-    private static void CaptureWindow(string filePath, nint windowHandle)
+    private static bool CaptureWindow(string filePath, nint windowHandle)
     {
         if (!WindowEnumerationService.IsWindow(windowHandle))
         {
-            return;
+            return false;
         }
 
         // If the window is minimized, restore it first so we can capture its content.
@@ -62,7 +66,7 @@ public sealed partial class ScreenCaptureService
         var height = rect.Bottom - rect.Top;
         if (width <= 0 || height <= 0)
         {
-            return;
+            return false;
         }
 
         var hdcScreen = GetDC(IntPtr.Zero);
@@ -75,6 +79,7 @@ public sealed partial class ScreenCaptureService
             }
 
             bmp.SaveAsPng(filePath);
+            return true;
         }
         finally
         {

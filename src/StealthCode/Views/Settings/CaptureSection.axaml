@@ -1,17 +1,15 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:StealthCode.ViewModels.Settings"
-             xmlns:controls="using:StealthCode.Controls"
              xmlns:capture="using:StealthCode.ScreenCapture.Models"
              x:Class="StealthCode.Views.Settings.CaptureSection"
              x:DataType="vm:CaptureSettingsViewModel">
 
-  <StackPanel Spacing="8">
-    <TextBlock Classes="section-header" Text="SCREENSHOT CAPTURE" />
+  <StackPanel Spacing="12">
 
     <StackPanel Spacing="4">
       <TextBlock Classes="field-label" Text="Mode" />
-      <ComboBox Classes="form-input"
+      <ComboBox Classes="form-input" HorizontalAlignment="Stretch"
                 SelectedValue="{Binding SelectedMode}"
                 SelectedValueBinding="{Binding Tag, x:DataType=ComboBoxItem}">
         <ComboBoxItem Content="Full Screen" Tag="{x:Static capture:CaptureMode.FullScreen}" />
@@ -34,26 +32,46 @@
                  IsVisible="{Binding SelectedWindowTitle, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
     </StackPanel>
 
-    <StackPanel Spacing="4">
-      <TextBlock Classes="field-label" Text="Single Capture" />
-      <controls:HotkeyTextBox Hotkey="{Binding Hotkey, Mode=TwoWay}" />
-      <TextBlock Classes="field-hint" Text="Takes one screenshot and sends it immediately" />
-    </StackPanel>
+    <Border Classes="divider" />
 
-    <StackPanel Spacing="4">
-      <TextBlock Classes="field-label" Text="Multi-Capture" />
-      <controls:HotkeyTextBox Hotkey="{Binding MultiCaptureHotkey, Mode=TwoWay}" />
-      <TextBlock Classes="field-hint"
-                 Text="Press to accumulate screenshots (e.g. after scrolling), then press Single Capture to send all at once" />
-    </StackPanel>
-
+    <!-- Folded by default -->
     <StackPanel Spacing="4">
       <TextBlock Classes="field-label" Text="Prompt" />
-      <TextBox Classes="form-input" Height="80"
-               AcceptsReturn="True" TextWrapping="Wrap"
-               Text="{Binding SystemPrompt}" />
-      <Button Classes="form-button compact" Content="Reset to Default"
-              Command="{Binding ResetPromptCommand}" />
+      <Button Classes="disclosure" Command="{Binding TogglePromptCommand}"
+              Content="{Binding SystemPromptPreview}"
+              IsVisible="{Binding !IsPromptExpanded}" />
+      <StackPanel Spacing="4" IsVisible="{Binding IsPromptExpanded}">
+        <TextBox Classes="form-input" Height="90"
+                 AcceptsReturn="True" TextWrapping="Wrap"
+                 Text="{Binding SystemPrompt}" />
+        <StackPanel Orientation="Horizontal" Spacing="6">
+          <Button Classes="form-button compact" Content="Reset to Default"
+                  Command="{Binding ResetPromptCommand}" />
+          <Button Classes="form-button compact" Content="Collapse"
+                  Command="{Binding TogglePromptCommand}" />
+        </StackPanel>
+      </StackPanel>
     </StackPanel>
+
+    <StackPanel Spacing="4">
+      <TextBlock Classes="field-label" Text="Batch prompt" />
+      <Button Classes="disclosure" Command="{Binding ToggleMultiCapturePromptCommand}"
+              Content="{Binding MultiCaptureSystemPromptPreview}"
+              IsVisible="{Binding !IsMultiCapturePromptExpanded}" />
+      <StackPanel Spacing="4" IsVisible="{Binding IsMultiCapturePromptExpanded}">
+        <TextBox Classes="form-input" Height="90"
+                 AcceptsReturn="True" TextWrapping="Wrap"
+                 Text="{Binding MultiCaptureSystemPrompt}" />
+        <StackPanel Orientation="Horizontal" Spacing="6">
+          <Button Classes="form-button compact" Content="Reset to Default"
+                  Command="{Binding ResetMultiCapturePromptCommand}" />
+          <Button Classes="form-button compact" Content="Collapse"
+                  Command="{Binding ToggleMultiCapturePromptCommand}" />
+        </StackPanel>
+        <TextBlock Classes="field-hint"
+                   Text="Sent with a batch so the AI treats the screenshots as one document and ignores the overlap from scrolling" />
+      </StackPanel>
+    </StackPanel>
+
   </StackPanel>
 </UserControl>

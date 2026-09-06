@@ -1,8 +1,11 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
+using Avalonia.Interactivity;
 
 namespace StealthCode.Controls;
 
+/// <summary>Captures a hotkey by pressing it.</summary>
 // ReSharper disable once PartialTypeWithSinglePart
 public partial class HotkeyTextBox : UserControl
 {
@@ -13,13 +16,11 @@ public partial class HotkeyTextBox : UserControl
     {
         InitializeComponent();
 
-        Input.PropertyChanged += (_, e) =>
-        {
-            if (e.Property == TextBox.TextProperty)
-            {
-                Hotkey = Input.Text ?? "";
-            }
-        };
+        Input.IsReadOnly = true;
+        Input.PlaceholderText = "Press a shortcut";
+        Input.AddHandler(KeyDownEvent, OnInputKeyDown, RoutingStrategies.Tunnel);
+        Input.GotFocus += (_, _) => SetHint("Press a shortcut, or Escape to cancel");
+        Input.LostFocus += (_, _) => SetHint("");
 
         HotkeyProperty.Changed.AddClassHandler<HotkeyTextBox>((box, e) =>
         {
@@ -28,8 +29,6 @@ public partial class HotkeyTextBox : UserControl
             {
                 box.Input.Text = value;
             }
-
-            box.Validate(value);
         });
     }
 
@@ -39,67 +38,45 @@ public partial class HotkeyTextBox : UserControl
         set => SetValue(HotkeyProperty, value);
     }
 
-    private void Validate(string hotkey)
+    /// <summary>Tunnelled so keys like Tab and Escape are recorded instead of moving focus.</summary>
+    private void OnInputKeyDown(object? sender, KeyEventArgs e)
     {
-        var error = GetValidationError(hotkey);
-        ErrorText.Text = error;
-        ErrorText.IsVisible = error.Length > 0;
+        e.Handled = true;
+
+        if (e.Key == Key.Escape)
+        {
+            SetHint("");
+            Focus();
+            return;
+        }
+
+        // A modifier alone is not a combination.
+        if (HotkeyFormatter.IsModifier(e.Key))
+        {
+            return;
+        }
+
+        var parts = HotkeyFormatter.Modifiers(e.KeyModifiers);
+        if (parts.Count == 0)
+        {
+            SetHint("Add Ctrl, Alt, Shift or Win");
+            return;
+        }
+
+        if (HotkeyFormatter.KeyName(e.Key) is not { } key)
+        {
+            SetHint("That key cannot be used in a shortcut");
+            return;
+        }
+
+        parts.Add(key);
+        Hotkey = string.Join("+", parts);
+        SetHint("");
     }
 
-    private static string GetValidationError(string hotkey)
+    private void SetHint(string text)
     {
-        if (string.IsNullOrWhiteSpace(hotkey))
-        {
-            return "Hotkey cannot be empty";
-        }
-
-        var parts = hotkey.Split('+', StringSplitOptions.TrimEntries);
-        if (parts.Length < 2)
-        {
-            return "Must be Modifier+Key (e.g. Ctrl+Shift+C)";
-        }
-
-        var hasModifier = false;
-        var hasKey = false;
-
-        foreach (var part in parts)
-        {
-            var upper = part.ToUpperInvariant();
-            if (upper is "CTRL" or "ALT" or "SHIFT" or "WIN")
-            {
-                hasModifier = true;
-            }
-            else if (upper.Length == 1 && char.IsLetterOrDigit(upper[0]))
-            {
-                hasKey = true;
-            }
-            else if (upper.StartsWith('F') && int.TryParse(upper.AsSpan(1), out var f) && f is >= 1 and <= 24)
-            {
-                hasKey = true;
-            }
-            else if (upper is "SPACE" or "ENTER" or "RETURN" or "TAB" or "ESCAPE" or "ESC"
-                     or "BACKSPACE" or "BACK" or "DELETE" or "DEL" or "INSERT" or "INS"
-                     or "HOME" or "END" or "PAGEUP" or "PGUP" or "PAGEDOWN" or "PGDN"
-                     or "UP" or "DOWN" or "LEFT" or "RIGHT" or "PRINTSCREEN" or "PRTSC")
-            {
-                hasKey = true;
-            }
-            else
-            {
-                return $"Unknown key: {part}";
-            }
-        }
-
-        if (!hasModifier)
-        {
-            return "Must include a modifier (Ctrl, Alt, Shift, Win)";
-        }
-
-        if (!hasKey)
-        {
-            return "Must include a key (e.g. C, F5, Space)";
-        }
-
-        return "";
+        ErrorText.Text = text;
+        ErrorText.IsVisible = text.Length > 0;
     }
 }

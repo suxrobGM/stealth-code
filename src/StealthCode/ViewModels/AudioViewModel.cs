@@ -1,8 +1,10 @@
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using StealthCode.Audio.Services;
 using StealthCode.Messages;
+using StealthCode.Models;
 using StealthCode.Services;
 using StealthCode.Utilities;
 
@@ -13,8 +15,8 @@ public sealed partial class AudioViewModel(
     SettingsService settingsService,
     HotkeyService hotkeyService,
     AudioInjectorService audioInjectorService,
-    ModelDownloadService modelDownloadService) : ViewModelBase,
-    IRecipient<ModelDownloadRequestedMessage>, IRecipient<AudioModelChangedMessage>
+    WhisperModelInstaller modelInstaller) : ViewModelBase,
+    IRecipient<AudioModelChangedMessage>
 {
     private IntPtr hwnd;
 
@@ -23,7 +25,7 @@ public sealed partial class AudioViewModel(
     public partial bool IsListening { get; set; }
 
     [ObservableProperty]
-    public partial string HotkeyText { get; set; } = "\u23FA Ctrl+Shift+A";
+    public partial string Hotkey { get; set; } = "Ctrl+Shift+A";
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsTranscriptPanelVisible))]
@@ -33,44 +35,20 @@ public sealed partial class AudioViewModel(
     public partial bool IsModelAvailable { get; set; }
 
     [ObservableProperty]
-    public partial bool IsModelDownloading { get; set; }
+    public partial string StatusText { get; set; } = "";
 
     [ObservableProperty]
-    public partial string StatusText { get; set; } = "";
+    [NotifyPropertyChangedFor(nameof(IsStatusWarning))]
+    [NotifyPropertyChangedFor(nameof(IsStatusError))]
+    public partial StatusLevel StatusLevel { get; set; } = StatusLevel.Info;
+
+    // Severity reaches the view as style classes.
+    public bool IsStatusWarning => StatusLevel == StatusLevel.Warning;
+
+    public bool IsStatusError => StatusLevel == StatusLevel.Error;
 
     /// <summary>The panel shows while listening and stays up afterwards to hold the last transcript.</summary>
     public bool IsTranscriptPanelVisible => IsListening || TranscriptText.Length > 0;
-
-    public async void Receive(ModelDownloadRequestedMessage message)
-    {
-        if (IsModelDownloading)
-        {
-            return;
-        }
-
-        var modelPath = settingsService.Settings.Audio.ModelPath;
-        var modelFileName = Path.GetFileName(modelPath);
-
-        IsModelDownloading = true;
-        StatusText = "Downloading model...";
-
-        modelDownloadService.DownloadProgress += OnDownloadProgress;
-        var success = await modelDownloadService.DownloadAsync(modelFileName, modelPath);
-        modelDownloadService.DownloadProgress -= OnDownloadProgress;
-
-        IsModelDownloading = false;
-
-        if (success)
-        {
-            ApplyModelAvailability(modelPath);
-        }
-        else
-        {
-            StatusText = "Download failed";
-        }
-
-        WeakReferenceMessenger.Default.Send(new ModelDownloadCompletedMessage(success));
-    }
 
     public void Receive(AudioModelChangedMessage message) => ApplyModelAvailability(message.ModelPath);
 
@@ -81,19 +59,33 @@ public sealed partial class AudioViewModel(
         ApplyModelAvailability(settingsService.Settings.Audio.ModelPath);
 
         audioInjectorService.AudioStateChanged += OnAudioStateChanged;
-        WeakReferenceMessenger.Default.Register<ModelDownloadRequestedMessage>(this);
+        modelInstaller.Progress += OnDownloadProgress;
+        modelInstaller.Completed += OnDownloadCompleted;
         WeakReferenceMessenger.Default.Register<AudioModelChangedMessage>(this);
     }
 
-    public void OnHotkeyChanged(string hotkey)
+    public void Cleanup()
     {
-        HotkeyText = $"\u23FA {hotkey}";
+        audioInjectorService.AudioStateChanged -= OnAudioStateChanged;
+        modelInstaller.Progress -= OnDownloadProgress;
+        modelInstaller.Completed -= OnDownloadCompleted;
+        WeakReferenceMessenger.Default.Unregister<AudioModelChangedMessage>(this);
+    }
+
+    /// <summary>Not OnHotkeyChanged: that name collides with the generated hook for Hotkey.</summary>
+    public void ApplyHotkey(string hotkey)
+    {
+        Hotkey = hotkey;
+
         if (IsModelAvailable)
         {
             RegisterHotkey();
         }
     }
 
+    public void LoadFromSettings() => Hotkey = settingsService.Settings.Audio.Hotkey;
+
+    [RelayCommand]
     public void Toggle()
     {
         if (IsListening)
@@ -102,25 +94,16 @@ public sealed partial class AudioViewModel(
             return;
         }
 
-        if (!IsModelAvailable || IsModelDownloading)
+        if (!IsModelAvailable || modelInstaller.IsDownloading)
         {
-            StatusText = "Whisper model not ready";
+            SetStatus("Whisper model not ready", StatusLevel.Warning);
             return;
         }
 
-        var started = audioInjectorService.Toggle();
-
-        if (!started)
+        if (!audioInjectorService.Toggle())
         {
-            StatusText = audioInjectorService.LastError ?? "Audio capture failed";
+            SetStatus(audioInjectorService.LastError ?? "Audio capture failed", StatusLevel.Error);
         }
-    }
-
-    public void Cleanup()
-    {
-        audioInjectorService.AudioStateChanged -= OnAudioStateChanged;
-        WeakReferenceMessenger.Default.Unregister<ModelDownloadRequestedMessage>(this);
-        WeakReferenceMessenger.Default.Unregister<AudioModelChangedMessage>(this);
     }
 
     private void OnAudioStateChanged(AudioStateChangedEventArgs e)
@@ -128,15 +111,31 @@ public sealed partial class AudioViewModel(
         Dispatcher.UIThread.Post(() =>
         {
             IsListening = e.IsListening;
-            StatusText = e.Status;
+            SetStatus(e.Status, StatusLevel.Info);
             TranscriptText = e.Transcript;
             WeakReferenceMessenger.Default.Send(new AudioRecordingChangedMessage(e.IsListening));
         });
     }
 
-    public void LoadFromSettings()
+    private void OnDownloadProgress(long downloaded, long total) =>
+        SetStatus($"Downloading model... {DownloadProgressText.Format(downloaded, total)}", StatusLevel.Info);
+
+    private void OnDownloadCompleted(bool success)
     {
-        HotkeyText = $"\u23FA {settingsService.Settings.Audio.Hotkey}";
+        if (success)
+        {
+            ApplyModelAvailability(settingsService.Settings.Audio.ModelPath);
+        }
+        else
+        {
+            SetStatus("Model download failed", StatusLevel.Error);
+        }
+    }
+
+    private void SetStatus(string text, StatusLevel level)
+    {
+        StatusText = text;
+        StatusLevel = level;
     }
 
     /// <summary>Points the hotkey at the model: registered once it is on disk, dropped with a hint when it is not.</summary>
@@ -146,13 +145,13 @@ public sealed partial class AudioViewModel(
 
         if (IsModelAvailable)
         {
-            StatusText = "";
+            SetStatus("", StatusLevel.Info);
             RegisterHotkey();
         }
         else
         {
             hotkeyService.Unregister("audio");
-            StatusText = "Whisper model not found, please download by clicking the button in settings";
+            SetStatus("No Whisper model", StatusLevel.Warning);
         }
     }
 
@@ -160,10 +159,5 @@ public sealed partial class AudioViewModel(
     {
         // Register replaces any existing "audio" hotkey, so it is safe to call again.
         hotkeyService.Register("audio", settingsService.Settings.Audio.Hotkey, hwnd, Toggle);
-    }
-
-    private void OnDownloadProgress(long downloaded, long total)
-    {
-        StatusText = $"Downloading model... {DownloadProgressText.Format(downloaded, total)}";
     }
 }

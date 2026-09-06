@@ -1,4 +1,7 @@
 using System.Text;
+using CommunityToolkit.Mvvm.Messaging;
+using StealthCode.Messages;
+using StealthCode.Models;
 using StealthCode.ScreenCapture.Models;
 using StealthCode.ScreenCapture.Services;
 using StealthCode.Terminal;
@@ -24,7 +27,7 @@ public sealed class CaptureInjectorService(
     ///     If multi-capture is active, finalizes and sends all accumulated screenshots.
     ///     Otherwise, captures a single screenshot and sends it immediately.
     /// </summary>
-    public void CaptureAndInject()
+    public async Task CaptureAndInjectAsync()
     {
         if (pendingCaptures.Count > 0)
         {
@@ -35,12 +38,22 @@ public sealed class CaptureInjectorService(
         var provider = providerRegistry.GetActiveProvider();
         if (!provider.SupportsImageInput)
         {
+            Toast($"{provider.Name} cannot accept images", StatusLevel.Warning);
             return;
         }
 
         var capture = settingsService.Settings.Capture;
-        var imagePath = screenCaptureService.Capture(capture)
-            .Replace('\\', '/');
+
+        // Off the UI thread: the blit, the restore wait, and PNG encoding all block.
+        var imagePath = await Task.Run(() => screenCaptureService.Capture(capture));
+
+        if (imagePath is null)
+        {
+            Toast("Capture failed", StatusLevel.Error);
+            return;
+        }
+
+        imagePath = imagePath.Replace('\\', '/');
 
         var prompt = provider.ImageMode switch
         {
@@ -59,11 +72,19 @@ public sealed class CaptureInjectorService(
     ///     Takes a screenshot and adds it to the pending multi-capture list.
     ///     Each press accumulates another screenshot. Use CaptureAndInject (Ctrl+Shift+C) to finalize.
     /// </summary>
-    public void MultiCapture()
+    public async Task MultiCaptureAsync()
     {
         var capture = settingsService.Settings.Capture;
-        var imagePath = screenCaptureService.Capture(capture).Replace('\\', '/');
-        pendingCaptures.Add(imagePath);
+        var imagePath = await Task.Run(() => screenCaptureService.Capture(capture));
+
+        if (imagePath is null)
+        {
+            Toast("Capture failed", StatusLevel.Error);
+            return;
+        }
+
+        pendingCaptures.Add(imagePath.Replace('\\', '/'));
+        Toast($"{pendingCaptures.Count} captured");
     }
 
     private void FinalizeMultiCapture()
@@ -71,7 +92,10 @@ public sealed class CaptureInjectorService(
         var provider = providerRegistry.GetActiveProvider();
         if (!provider.SupportsImageInput)
         {
+            // Say so; the queue is discarded either way.
+            var discarded = pendingCaptures.Count;
             pendingCaptures.Clear();
+            Toast($"{provider.Name} cannot accept images — {discarded} discarded", StatusLevel.Warning);
             return;
         }
 
@@ -98,4 +122,7 @@ public sealed class CaptureInjectorService(
         var prompt = sb.ToString();
         _ = PromptInjector.SendAsync(pty, prompt);
     }
+
+    private static void Toast(string text, StatusLevel level = StatusLevel.Info) =>
+        WeakReferenceMessenger.Default.Send(new ShowToastMessage(text, level));
 }

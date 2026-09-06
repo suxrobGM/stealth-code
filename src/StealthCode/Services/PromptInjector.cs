@@ -1,4 +1,7 @@
 using System.Text;
+using CommunityToolkit.Mvvm.Messaging;
+using StealthCode.Messages;
+using StealthCode.Models;
 using StealthCode.Terminal;
 
 namespace StealthCode.Services;
@@ -26,17 +29,30 @@ public static class PromptInjector
 
         var pasteBytes = Encoding.UTF8.GetBytes($"\x1b[200~{cleaned}\x1b[201~");
 
+        // Sends are serialised, so this one waits.
+        if (SendLock.CurrentCount == 0)
+        {
+            Toast("Queued behind another send", StatusLevel.Info);
+        }
+
         await SendLock.WaitAsync();
 
         try
         {
             pty.Write(pasteBytes);
+
+            // The prompt sits visible but unsubmitted for this window.
+            Toast("Sending...");
             await Task.Delay(EnterDelayMs);
             pty.Write(Enter);
+            Toast("Sent", StatusLevel.Success);
         }
         finally
         {
             SendLock.Release();
         }
     }
+
+    private static void Toast(string text, StatusLevel level = StatusLevel.Info) =>
+        WeakReferenceMessenger.Default.Send(new ShowToastMessage(text, level));
 }

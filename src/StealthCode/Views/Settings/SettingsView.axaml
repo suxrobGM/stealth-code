@@ -5,26 +5,46 @@
              xmlns:views="using:StealthCode.Views.Settings"
              x:Class="StealthCode.Views.Settings.SettingsView"
              x:DataType="settings:SettingsViewModel"
-             Width="300" Background="{StaticResource PanelBg}">
+             Width="320" Background="{StaticResource PanelBg}">
 
-  <ScrollViewer VerticalScrollBarVisibility="Auto">
-    <StackPanel Margin="16,12" Spacing="16">
-      <DockPanel>
-        <TextBlock DockPanel.Dock="Left" Text="Settings" FontSize="13"
-                   FontWeight="SemiBold" Foreground="{StaticResource PrimaryFg}"
-                   VerticalAlignment="Center" />
-        <Button Classes="chrome" DockPanel.Dock="Right" Content="&#x00D7;" FontSize="14"
-                Width="28" HorizontalAlignment="Right"
-                Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).ToggleSettingsCommand}" />
-      </DockPanel>
+  <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="16,12">
 
-      <views:GeneralSection DataContext="{Binding General}" />
-      <Border Classes="divider" />
-      <views:CaptureSection DataContext="{Binding Capture}" />
-      <Border Classes="divider" />
-      <views:AudioSection DataContext="{Binding Audio}" />
-      <Border Classes="divider" />
-      <views:UpdateSection DataContext="{Binding Updates}" />
+    <DockPanel Grid.Row="0" Margin="0,0,0,12">
+      <TextBlock DockPanel.Dock="Left" Classes="dialog-title" Text="Settings" />
+      <Button Classes="chrome" DockPanel.Dock="Right" Content="{StaticResource IconClose}"
+              Width="28" HorizontalAlignment="Right"
+              Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).ToggleSettingsCommand}" />
+    </DockPanel>
+
+    <!-- One tab at a time -->
+    <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="2" Margin="0,0,0,14">
+      <Button Classes="tab" Classes.selected="{Binding IsGeneralTab}" Content="General"
+              Command="{Binding SelectTabCommand}"
+              CommandParameter="{x:Static settings:SettingsTab.General}" />
+      <Button Classes="tab" Classes.selected="{Binding IsCaptureTab}" Content="Capture"
+              Command="{Binding SelectTabCommand}"
+              CommandParameter="{x:Static settings:SettingsTab.Capture}" />
+      <Button Classes="tab" Classes.selected="{Binding IsAudioTab}" Content="Audio"
+              Command="{Binding SelectTabCommand}"
+              CommandParameter="{x:Static settings:SettingsTab.Audio}" />
     </StackPanel>
-  </ScrollViewer>
+
+    <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+      <!-- Wrapper keeps IsVisible on this view model; the section swaps DataContext -->
+      <Panel>
+        <Panel IsVisible="{Binding IsGeneralTab}">
+          <views:GeneralSection DataContext="{Binding General}" />
+        </Panel>
+        <Panel IsVisible="{Binding IsCaptureTab}">
+          <views:CaptureSection DataContext="{Binding Capture}" />
+        </Panel>
+        <Panel IsVisible="{Binding IsAudioTab}">
+          <views:AudioSection DataContext="{Binding Audio}" />
+        </Panel>
+      </Panel>
+    </ScrollViewer>
+
+    <views:UpdateSection Grid.Row="3" Margin="0,12,0,0" DataContext="{Binding Updates}" />
+
+  </Grid>
 </UserControl>
