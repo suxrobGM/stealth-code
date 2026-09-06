@@ -134,8 +134,8 @@ public sealed partial class MainWindowViewModel : ViewModelBase,
                 NoFocusHotkey = message.Hotkey;
                 break;
             case "audio":
-                Audio.ApplyHotkey(message.Hotkey);
-                return;
+                Audio.Hotkey = message.Hotkey;
+                break;
         }
 
         hotkeys.Rebind(message.Name, message.Hotkey);
@@ -151,12 +151,13 @@ public sealed partial class MainWindowViewModel : ViewModelBase,
         PtyService.ProcessExited += OnProcessExited;
         CleanupUtils.CleanupOldCaptures();
         WeakReferenceMessenger.Default.Send(new ApplyOpacityMessage(WindowOpacity));
-        Audio.Initialize(windowHandle);
+        Audio.Initialize();
 
         hotkeys.Bind(windowHandle, new Dictionary<string, Action>
         {
             ["capture"] = RunCapture,
             ["multicapture"] = () => MultiCaptureCommand.Execute(null),
+            ["audio"] = Audio.Toggle,
             ["opacity"] = () => CycleOpacityCommand.Execute(null),
             ["nofocus"] = () => ToggleNoFocusCommand.Execute(null)
         });

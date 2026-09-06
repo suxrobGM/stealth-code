@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:StealthCode.ViewModels.Settings"
+             xmlns:conv="using:StealthCode.Converters"
              xmlns:controls="using:StealthCode.Controls"
              x:Class="StealthCode.Views.Settings.GeneralSection"
              x:DataType="vm:GeneralSettingsViewModel">
@@ -10,24 +11,28 @@
     <!-- Matches what the opacity hotkey cycles -->
     <StackPanel Spacing="6">
       <TextBlock Classes="field-label" Text="Opacity" />
-      <StackPanel Orientation="Horizontal" Spacing="6">
-        <Button Classes="chip" Classes.selected="{Binding IsFullOpacity}" Content="100%"
-                Command="{Binding SetOpacityCommand}">
-          <Button.CommandParameter><x:Double>1.0</x:Double></Button.CommandParameter>
-        </Button>
-        <Button Classes="chip" Classes.selected="{Binding IsHighOpacity}" Content="80%"
-                Command="{Binding SetOpacityCommand}">
-          <Button.CommandParameter><x:Double>0.8</x:Double></Button.CommandParameter>
-        </Button>
-        <Button Classes="chip" Classes.selected="{Binding IsMediumOpacity}" Content="60%"
-                Command="{Binding SetOpacityCommand}">
-          <Button.CommandParameter><x:Double>0.6</x:Double></Button.CommandParameter>
-        </Button>
-        <Button Classes="chip" Classes.selected="{Binding IsLowOpacity}" Content="40%"
-                Command="{Binding SetOpacityCommand}">
-          <Button.CommandParameter><x:Double>0.4</x:Double></Button.CommandParameter>
-        </Button>
-      </StackPanel>
+      <ItemsControl ItemsSource="{x:Static vm:GeneralSettingsViewModel.OpacityPresets}">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate>
+            <StackPanel Orientation="Horizontal" Spacing="6" />
+          </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="x:Double">
+            <Button Classes="chip" Content="{Binding StringFormat={}{0:0%}}"
+                    Classes.selected="{Binding $self.Tag}"
+                    Command="{Binding $parent[ItemsControl].((vm:GeneralSettingsViewModel)DataContext).SetOpacityCommand}"
+                    CommandParameter="{Binding}">
+              <Button.Tag>
+                <MultiBinding Converter="{x:Static conv:SameOpacityConverter.Instance}">
+                  <Binding Path="." />
+                  <Binding Path="$parent[ItemsControl].((vm:GeneralSettingsViewModel)DataContext).Opacity" />
+                </MultiBinding>
+              </Button.Tag>
+            </Button>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
     </StackPanel>
 
     <Border Classes="divider" />

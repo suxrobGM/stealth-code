@@ -14,10 +14,6 @@ public sealed partial class GeneralSettingsViewModel(SettingsService settingsSer
     public static IReadOnlyList<double> OpacityPresets { get; } = [1.0, 0.8, 0.6, 0.4];
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsFullOpacity))]
-    [NotifyPropertyChangedFor(nameof(IsHighOpacity))]
-    [NotifyPropertyChangedFor(nameof(IsMediumOpacity))]
-    [NotifyPropertyChangedFor(nameof(IsLowOpacity))]
     public partial double Opacity { get; set; } = 1.0;
 
     [ObservableProperty]
@@ -39,11 +35,6 @@ public sealed partial class GeneralSettingsViewModel(SettingsService settingsSer
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HotkeyConflict))]
     public partial string NoFocusHotkey { get; set; } = "Ctrl+Shift+F";
-
-    public bool IsFullOpacity => IsPreset(0);
-    public bool IsHighOpacity => IsPreset(1);
-    public bool IsMediumOpacity => IsPreset(2);
-    public bool IsLowOpacity => IsPreset(3);
 
     /// <summary>Names a combination bound twice; the losing registration silently never fires.</summary>
     public string HotkeyConflict
@@ -77,8 +68,6 @@ public sealed partial class GeneralSettingsViewModel(SettingsService settingsSer
 
     [RelayCommand]
     private void SetOpacity(double value) => Opacity = value;
-
-    private bool IsPreset(int index) => Math.Abs(Opacity - OpacityPresets[index]) < 0.001;
 
     partial void OnOpacityChanged(double value)
     {

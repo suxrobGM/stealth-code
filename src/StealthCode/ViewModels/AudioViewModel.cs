@@ -13,13 +13,11 @@ namespace StealthCode.ViewModels;
 // ReSharper disable once PartialTypeWithSinglePart
 public sealed partial class AudioViewModel(
     SettingsService settingsService,
-    HotkeyService hotkeyService,
+    GlobalHotkeys hotkeys,
     AudioInjectorService audioInjectorService,
     WhisperModelInstaller modelInstaller) : ViewModelBase,
     IRecipient<AudioModelChangedMessage>
 {
-    private IntPtr hwnd;
-
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsTranscriptPanelVisible))]
     public partial bool IsListening { get; set; }
@@ -52,10 +50,8 @@ public sealed partial class AudioViewModel(
 
     public void Receive(AudioModelChangedMessage message) => ApplyModelAvailability(message.ModelPath);
 
-    public void Initialize(IntPtr windowHandle)
+    public void Initialize()
     {
-        hwnd = windowHandle;
-
         ApplyModelAvailability(settingsService.Settings.Audio.ModelPath);
 
         audioInjectorService.AudioStateChanged += OnAudioStateChanged;
@@ -70,17 +66,6 @@ public sealed partial class AudioViewModel(
         modelInstaller.Progress -= OnDownloadProgress;
         modelInstaller.Completed -= OnDownloadCompleted;
         WeakReferenceMessenger.Default.Unregister<AudioModelChangedMessage>(this);
-    }
-
-    /// <summary>Not OnHotkeyChanged: that name collides with the generated hook for Hotkey.</summary>
-    public void ApplyHotkey(string hotkey)
-    {
-        Hotkey = hotkey;
-
-        if (IsModelAvailable)
-        {
-            RegisterHotkey();
-        }
     }
 
     public void LoadFromSettings() => Hotkey = settingsService.Settings.Audio.Hotkey;
@@ -138,26 +123,19 @@ public sealed partial class AudioViewModel(
         StatusLevel = level;
     }
 
-    /// <summary>Points the hotkey at the model: registered once it is on disk, dropped with a hint when it is not.</summary>
+    /// <summary>Points the hotkey at the model: live once it is on disk, off with a hint when it is not.</summary>
     private void ApplyModelAvailability(string modelPath)
     {
         IsModelAvailable = ModelDownloadService.ModelExists(modelPath);
+        hotkeys.SetEnabled("audio", IsModelAvailable);
 
         if (IsModelAvailable)
         {
             SetStatus("", StatusLevel.Info);
-            RegisterHotkey();
         }
         else
         {
-            hotkeyService.Unregister("audio");
             SetStatus("No Whisper model", StatusLevel.Warning);
         }
-    }
-
-    private void RegisterHotkey()
-    {
-        // Register replaces any existing "audio" hotkey, so it is safe to call again.
-        hotkeyService.Register("audio", settingsService.Settings.Audio.Hotkey, hwnd, Toggle);
     }
 }

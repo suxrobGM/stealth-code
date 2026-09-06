@@ -112,49 +112,17 @@ public sealed partial class HotkeyService : IDisposable
         modifiers = 0;
         vk = 0;
 
-        var parts = hotkey.Split('+', StringSplitOptions.TrimEntries);
-        foreach (var part in parts)
+        foreach (var part in hotkey.Split('+', StringSplitOptions.TrimEntries))
         {
-            var upper = part.ToUpperInvariant();
-            switch (upper)
+            var flag = HotkeyCodes.ModifierFlag(part);
+
+            if (flag != 0)
             {
-                case "CTRL": modifiers |= MOD_CONTROL; break;
-                case "ALT": modifiers |= MOD_ALT; break;
-                case "SHIFT": modifiers |= MOD_SHIFT; break;
-                case "WIN": modifiers |= MOD_WIN; break;
-                default:
-                    if (upper.Length == 1)
-                    {
-                        vk = (uint)char.ToUpper(upper[0]);
-                    }
-                    else if (upper.StartsWith("F") && int.TryParse(upper.AsSpan(1), out var fNum) && fNum is >= 1 and <= 24)
-                    {
-                        vk = (uint)(0x6F + fNum); // VK_F1=0x70 .. VK_F24=0x87
-                    }
-                    else
-                    {
-                        vk = upper switch
-                        {
-                            "SPACE" => 0x20,
-                            "ENTER" or "RETURN" => 0x0D,
-                            "TAB" => 0x09,
-                            "ESCAPE" or "ESC" => 0x1B,
-                            "BACKSPACE" or "BACK" => 0x08,
-                            "DELETE" or "DEL" => 0x2E,
-                            "INSERT" or "INS" => 0x2D,
-                            "HOME" => 0x24,
-                            "END" => 0x23,
-                            "PAGEUP" or "PGUP" => 0x21,
-                            "PAGEDOWN" or "PGDN" => 0x22,
-                            "UP" => 0x26,
-                            "DOWN" => 0x28,
-                            "LEFT" => 0x25,
-                            "RIGHT" => 0x27,
-                            "PRINTSCREEN" or "PRTSC" => 0x2C,
-                            _ => 0
-                        };
-                    }
-                    break;
+                modifiers |= flag;
+            }
+            else
+            {
+                vk = HotkeyCodes.KeyCode(part);
             }
         }
     }
@@ -170,10 +138,6 @@ public sealed partial class HotkeyService : IDisposable
 
     private const int GWLP_WNDPROC = -4;
     private const uint WM_HOTKEY = 0x0312;
-    private const uint MOD_ALT = 0x0001;
-    private const uint MOD_CONTROL = 0x0002;
-    private const uint MOD_SHIFT = 0x0004;
-    private const uint MOD_WIN = 0x0008;
 
     [LibraryImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
