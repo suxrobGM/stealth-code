@@ -4,17 +4,15 @@ using StealthCode.Terminal;
 
 namespace StealthCode.Services;
 
-public sealed record AudioStateChangedEventArgs(bool IsListening, string Status, string Preview);
+public sealed record AudioStateChangedEventArgs(bool IsListening, string Status, string Transcript);
 
 /// <summary>Streams loopback audio through Whisper and injects finished utterances into the terminal.</summary>
 public sealed class AudioInjectorService
 {
-    private const int PreviewLength = 60;
-
     private readonly SettingsService settingsService;
     private readonly LiveTranscriptionService live;
     private readonly PtyService pty;
-    private string preview = "";
+    private string transcript = "";
     private string status = "";
     private bool starting;
 
@@ -46,11 +44,11 @@ public sealed class AudioInjectorService
         if (live.IsListening)
         {
             _ = live.StopAsync();
-            Raise(false, "Transcribing...", preview);
             return false;
         }
 
         starting = true;
+        transcript = "";
         Raise(true, "Loading model...", "");
         var audio = settingsService.Settings.Audio;
 
@@ -82,24 +80,24 @@ public sealed class AudioInjectorService
             LiveTranscriptionState.Hearing => "Hearing...",
             LiveTranscriptionState.Transcribing => "Transcribing...",
             LiveTranscriptionState.LoadingModel => "Loading model...",
+            LiveTranscriptionState.Stopping => "Finishing...",
             _ => live.LastError ?? ""
         };
 
-        Raise(live.IsListening, status, preview);
+        Raise(live.IsListening, status, transcript);
     }
 
     private void OnPartialTranscript(string text)
     {
-        preview = text.Length > PreviewLength ? $"…{text[^PreviewLength..]}" : text;
-        Raise(live.IsListening, status, preview);
+        transcript = text;
+        Raise(live.IsListening, status, transcript);
     }
 
     private void OnUtteranceCompleted(string text)
     {
         var audio = settingsService.Settings.Audio;
         _ = PromptInjector.SendAsync(pty, $"{audio.SystemPrompt.Trim()}\n\n{text}");
-        preview = "";
-        Raise(live.IsListening, "Sent", "");
+        Raise(live.IsListening, "Sent", transcript);
     }
 
     private void OnFailed(string message)
@@ -112,9 +110,9 @@ public sealed class AudioInjectorService
         }
     }
 
-    private void Raise(bool isListening, string newStatus, string transcriptPreview)
+    private void Raise(bool isListening, string newStatus, string transcriptText)
     {
         status = newStatus;
-        AudioStateChanged?.Invoke(new AudioStateChangedEventArgs(isListening, newStatus, transcriptPreview));
+        AudioStateChanged?.Invoke(new AudioStateChangedEventArgs(isListening, newStatus, transcriptText));
     }
 }

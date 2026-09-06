@@ -12,7 +12,8 @@ public enum LiveTranscriptionState
     LoadingModel,
     Listening,
     Hearing,
-    Transcribing
+    Transcribing,
+    Stopping
 }
 
 /// <summary>Streams loopback audio through Whisper and reports transcripts as speech ends.</summary>
@@ -115,6 +116,7 @@ public sealed class LiveTranscriptionService(TranscriptionService transcription)
         }
 
         stopping = true;
+        SetState(LiveTranscriptionState.Stopping);
 
         try
         {
@@ -273,7 +275,7 @@ public sealed class LiveTranscriptionService(TranscriptionService transcription)
                     transcribing = false;
                 }
 
-                SetState(segmenter!.SpeechActive ? LiveTranscriptionState.Hearing : LiveTranscriptionState.Listening);
+                SetState(ActiveState());
             }
         }
         catch (OperationCanceledException)
@@ -294,7 +296,17 @@ public sealed class LiveTranscriptionService(TranscriptionService transcription)
             return;
         }
 
-        SetState(active ? LiveTranscriptionState.Hearing : LiveTranscriptionState.Listening);
+        SetState(ActiveState());
+    }
+
+    private LiveTranscriptionState ActiveState()
+    {
+        if (stopping)
+        {
+            return LiveTranscriptionState.Stopping;
+        }
+
+        return segmenter!.SpeechActive ? LiveTranscriptionState.Hearing : LiveTranscriptionState.Listening;
     }
 
     private void SetState(LiveTranscriptionState next)
