@@ -26,7 +26,10 @@ public sealed partial class AudioViewModel(
     public partial string HotkeyText { get; set; } = "\u23FA Ctrl+Shift+A";
 
     [ObservableProperty]
-    public partial string TranscriptPreview { get; set; } = "";
+    public partial string TranscriptText { get; set; } = "";
+
+    [ObservableProperty]
+    public partial bool IsTranscriptPanelVisible { get; set; }
 
     [ObservableProperty]
     public partial bool IsModelAvailable { get; set; }
@@ -155,7 +158,8 @@ public sealed partial class AudioViewModel(
         {
             IsListening = e.IsListening;
             StatusText = e.Status;
-            TranscriptPreview = e.Preview;
+            TranscriptText = e.Transcript;
+            IsTranscriptPanelVisible = e.IsListening || e.Transcript.Length > 0;
             WeakReferenceMessenger.Default.Send(new AudioRecordingChangedMessage(e.IsListening));
         });
     }
