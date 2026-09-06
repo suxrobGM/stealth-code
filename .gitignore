@@ -60,3 +60,5 @@ nunit-*.xml
 .claude/settings.local.json
 
 publish/
+
+.VSCodeCounter/
