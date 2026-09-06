@@ -2,6 +2,36 @@
 
 All notable changes to Stealth Code will be documented in this file.
 
+## [1.3.0] - 2026-09-06
+
+### Features
+
+- **Live listening** - audio playing on your machine is transcribed as it happens, instead of being recorded and transcribed in one pass at the end. Each utterance is sent to the CLI the moment you stop speaking
+- Transcripts are typed straight into the terminal rather than saved to a file for the CLI to open
+- A transcript panel below the terminal shows what has been heard so far
+- Settings > Audio picks the Whisper model, the spoken language, and how long a pause ends an utterance
+- Every action is now a button. Capture, multi-capture, no-focus, opacity and listening were hotkey-only, and the bottom bar just listed the hotkeys; it is now a row of buttons that do the same thing - which matters most in no-focus mode, where clicking is safe
+- Settings is split into three tabs instead of one long scroll, with all five hotkeys in one place and opacity as the four presets its hotkey cycles
+- The multi-capture prompt can now be edited; it was saved in settings but had nowhere to change it
+- Messages appear as toasts over the terminal instead of pushing the terminal aside
+
+### Fixes
+
+- A screenshot of a window that had closed handed the CLI a file that was never written
+- The window no longer freezes while a screenshot is taken
+- Codex now receives pasted prompts - it ignored the Enter that followed a paste, leaving the prompt sitting unsent
+- Stopping listening no longer leaves the old status on screen
+- A hotkey another app has already claimed is now reported instead of silently doing nothing
+- The PROTECTED badge shows the real state; it previously said PROTECTED whether or not protection had been enabled
+- Capturing on a CLI that cannot read images now explains why, and the button is disabled with the reason in its tooltip
+- Escape works as a hotkey again
+- Cancelling a model download had no effect
+
+### Improvements
+
+- Reworked colours for readability - the status bar and title-bar chips were too faint against the background, and inputs showed a blue focus ring that clashed with the accent
+- The terminal follows the app theme, instead of staying on the previous colours until restart
+
 ## [1.2.1] - 2026-08-31
 
 ### Improvements

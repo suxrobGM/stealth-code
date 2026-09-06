@@ -8,7 +8,7 @@
     <ApplicationIcon>Assets\logo.ico</ApplicationIcon>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <AssemblyName>stealthcode</AssemblyName>
-    <Version>1.2.1</Version>
+    <Version>1.3.0</Version>
     <Authors>Sukhrob Ilyosbekov</Authors>
     <Product>Stealth Code</Product>
     <AssemblyTitle>Stealth Code</AssemblyTitle>
