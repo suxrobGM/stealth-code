@@ -3,6 +3,7 @@
              xmlns:vm="using:StealthCode.ViewModels.Settings"
              xmlns:controls="using:StealthCode.Controls"
              xmlns:audio="using:StealthCode.Audio.Models"
+             xmlns:audioSvc="using:StealthCode.Audio.Services"
              x:Class="StealthCode.Views.Settings.AudioSection"
              x:DataType="vm:AudioSettingsViewModel">
 
@@ -16,13 +17,43 @@
 
     <StackPanel Spacing="4">
       <TextBlock Classes="field-label" Text="Whisper Model" />
-      <TextBox Classes="form-input"
-               PlaceholderText="Path to ggml-*.bin model file"
-               Text="{Binding ModelPath}" />
+      <ComboBox Classes="form-input"
+                ItemsSource="{x:Static audioSvc:WhisperModelCatalog.All}"
+                SelectedItem="{Binding SelectedModel}">
+        <ComboBox.ItemTemplate>
+          <DataTemplate x:DataType="audioSvc:WhisperModel">
+            <TextBlock Text="{Binding Label}" />
+          </DataTemplate>
+        </ComboBox.ItemTemplate>
+      </ComboBox>
       <Button Classes="form-button"
               Command="{Binding DownloadModelCommand}"
               IsEnabled="{Binding !IsModelDownloading}"
               Content="{Binding DownloadModelButtonText}" />
+      <TextBlock Classes="field-hint"
+                 Text="Runs on the CPU by default; base is the fastest usable model there. With a GPU pack installed, large-v3-turbo q5 gives the best accuracy." />
+    </StackPanel>
+
+    <StackPanel Spacing="4">
+      <TextBlock Classes="field-label" Text="Language" />
+      <TextBox Classes="form-input" Text="{Binding Language}" />
+      <TextBlock Classes="field-hint"
+                 Text="Two-letter code such as en, de, ru. Use auto to detect per chunk (slower)." />
+    </StackPanel>
+
+    <StackPanel Spacing="4">
+      <DockPanel>
+        <TextBlock Classes="field-label" DockPanel.Dock="Left" Text="Pause before sending"
+                   VerticalAlignment="Center" />
+        <TextBlock Classes="field-label" DockPanel.Dock="Right"
+                   VerticalAlignment="Center" HorizontalAlignment="Right"
+                   Text="{Binding EndOfUtteranceSeconds, StringFormat='{}{0:0.0} s'}" />
+      </DockPanel>
+      <Slider Minimum="1.0" Maximum="4.0"
+              TickFrequency="0.1" IsSnapToTickEnabled="True"
+              Value="{Binding EndOfUtteranceSeconds}" />
+      <TextBlock Classes="field-hint"
+                 Text="Silence after speech before the transcript is sent to the CLI." />
     </StackPanel>
 
     <StackPanel Spacing="4">

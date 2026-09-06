@@ -29,7 +29,13 @@ public sealed partial class AudioSettingsViewModel : SettingsSectionViewModel,
     public partial string Hotkey { get; set; } = "Ctrl+Shift+A";
 
     [ObservableProperty]
-    public partial string ModelPath { get; set; } = "";
+    public partial WhisperModel? SelectedModel { get; set; }
+
+    [ObservableProperty]
+    public partial string Language { get; set; } = "en";
+
+    [ObservableProperty]
+    public partial double EndOfUtteranceSeconds { get; set; } = 1.8;
 
     [ObservableProperty]
     public partial string SystemPrompt { get; set; } = "";
@@ -63,6 +69,11 @@ public sealed partial class AudioSettingsViewModel : SettingsSectionViewModel,
     {
         IsModelDownloading = false;
         DownloadModelButtonText = message.Success ? "Downloaded" : "Download Model";
+
+        if (message.Success)
+        {
+            WeakReferenceMessenger.Default.Send(new AudioModelChangedMessage(SettingsService.Settings.Audio.ModelPath));
+        }
     }
 
     protected override void LoadCore()
@@ -70,7 +81,9 @@ public sealed partial class AudioSettingsViewModel : SettingsSectionViewModel,
         var audio = SettingsService.Settings.Audio;
 
         Hotkey = audio.Hotkey;
-        ModelPath = audio.ModelPath;
+        SelectedModel = WhisperModelCatalog.Resolve(audio.ModelPath);
+        Language = audio.Language;
+        EndOfUtteranceSeconds = audio.EndOfUtteranceMs / 1000.0;
         SystemPrompt = audio.SystemPrompt;
         SelectedGpuBackend = audio.GpuBackend;
         DownloadModelButtonText = ModelDownloadService.ModelExists(audio.ModelPath)
@@ -86,7 +99,9 @@ public sealed partial class AudioSettingsViewModel : SettingsSectionViewModel,
     [RelayCommand]
     private void DownloadModel()
     {
-        if (ModelDownloadService.ModelExists(ModelPath))
+        var modelPath = SettingsService.Settings.Audio.ModelPath;
+
+        if (ModelDownloadService.ModelExists(modelPath))
         {
             DownloadModelButtonText = "Model already exists";
             return;
@@ -94,7 +109,7 @@ public sealed partial class AudioSettingsViewModel : SettingsSectionViewModel,
 
         IsModelDownloading = true;
         DownloadModelButtonText = "Downloading...";
-        WeakReferenceMessenger.Default.Send(new ModelDownloadRequestedMessage(ModelPath));
+        WeakReferenceMessenger.Default.Send(new ModelDownloadRequestedMessage(modelPath));
     }
 
     /// <summary>Installs or removes the pack for the selected backend.</summary>
@@ -165,9 +180,38 @@ public sealed partial class AudioSettingsViewModel : SettingsSectionViewModel,
         SaveHotkey("audio", value);
     }
 
-    partial void OnModelPathChanged(string value)
+    partial void OnSelectedModelChanged(WhisperModel? value)
     {
-        SettingsService.Settings.Audio.ModelPath = value;
+        if (IsLoading || value is null)
+        {
+            return;
+        }
+
+        SettingsService.Settings.Audio.ModelPath = value.Path;
+        Save();
+        DownloadModelButtonText = value.IsDownloaded() ? "Model ready" : $"Download ({value.SizeText})";
+        WeakReferenceMessenger.Default.Send(new AudioModelChangedMessage(value.Path));
+    }
+
+    partial void OnLanguageChanged(string value)
+    {
+        if (IsLoading)
+        {
+            return;
+        }
+
+        SettingsService.Settings.Audio.Language = value;
+        Save();
+    }
+
+    partial void OnEndOfUtteranceSecondsChanged(double value)
+    {
+        if (IsLoading)
+        {
+            return;
+        }
+
+        SettingsService.Settings.Audio.EndOfUtteranceMs = (int)Math.Round(value * 1000);
         Save();
     }
 
