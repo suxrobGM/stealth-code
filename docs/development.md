@@ -16,6 +16,14 @@ cd scripts
 .\publish.ps1
 ```
 
+## Tests
+
+```powershell
+dotnet test --project tests/StealthCode.Tests/StealthCode.Tests.csproj -c Release
+```
+
+Tests cover imports, saved profiles, prompts, and headless layout. `global.json` selects Microsoft.Testing.Platform. UI previews appear in the test output's `ui-artifacts/` folder.
+
 ## Tech stack
 
 | Layer | Technology |

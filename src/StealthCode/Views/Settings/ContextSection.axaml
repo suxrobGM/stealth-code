@@ -1,0 +1,67 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:StealthCode.ViewModels.Settings"
+             x:Class="StealthCode.Views.Settings.ContextSection"
+             x:DataType="vm:ContextSettingsViewModel">
+  <StackPanel Spacing="12">
+    <StackPanel Spacing="4">
+      <CheckBox Content="Use saved context" IsChecked="{Binding UseSavedContext}" />
+      <TextBlock Classes="field-hint" TextWrapping="Wrap"
+                 Text="When enabled, saved text accompanies every audio and screenshot request to your selected CLI/provider. Turning it off affects future requests; earlier context remains in the conversation." />
+    </StackPanel>
+
+    <StackPanel Spacing="4">
+      <TextBlock Classes="field-label" Text="Background" />
+      <TextBox Classes="form-input" Height="140" AcceptsReturn="True" TextWrapping="Wrap"
+               PlaceholderText="Employment, projects, education, skills, and dates."
+               Text="{Binding Background}" />
+      <Button Classes="form-button" Content="Import resume" Click="OnImportResumeClick"
+              IsEnabled="{Binding !IsImporting}" />
+      <TextBlock Classes="field-hint" TextWrapping="Wrap" Text="PDF, DOCX, or TXT, up to 10 MiB. Import runs locally and is reviewed before saving." />
+      <TextBlock Classes="status" Text="Reading resume..." IsVisible="{Binding IsImporting}" />
+    </StackPanel>
+
+    <StackPanel Spacing="6" IsVisible="{Binding HasImportPreview}">
+      <TextBlock Classes="field-label" Text="Review imported text" />
+      <TextBox Classes="form-input" Height="180" AcceptsReturn="True" TextWrapping="Wrap"
+               Text="{Binding ImportPreview}" />
+      <TextBlock Classes="field-hint" TextWrapping="Wrap" Text="{Binding PreviewCharacterCountText}" />
+      <StackPanel Orientation="Horizontal" Spacing="6">
+        <Button Classes="form-button compact" Content="Replace background" Command="{Binding ReplaceBackgroundCommand}" />
+        <Button Classes="form-button compact" Content="Cancel" Command="{Binding CancelImportCommand}" />
+      </StackPanel>
+      <TextBlock Classes="field-hint" TextWrapping="Wrap" Text="Replacing updates your draft only. Your saved profile stays active until you save." />
+    </StackPanel>
+
+    <StackPanel Spacing="4">
+      <TextBlock Classes="field-label" Text="Experience stories" />
+      <TextBox Classes="form-input" Height="130" AcceptsReturn="True" TextWrapping="Wrap"
+               PlaceholderText="Situation, your individual contribution, actions, and results."
+               Text="{Binding ExperienceStories}" />
+      <TextBlock Classes="field-hint" TextWrapping="Wrap" Text="Include real examples of decisions, challenges, collaboration, and leadership. Separate your work from team outcomes." />
+    </StackPanel>
+
+    <StackPanel Spacing="4">
+      <TextBlock Classes="field-label" Text="Opportunity" />
+      <TextBox Classes="form-input" Height="110" AcceptsReturn="True" TextWrapping="Wrap"
+               PlaceholderText="Company, target role, and job description."
+               Text="{Binding Opportunity}" />
+      <TextBlock Classes="field-hint" TextWrapping="Wrap" Text="Job requirements are kept separate from your experience." />
+    </StackPanel>
+
+    <Border Classes="divider" />
+    <StackPanel Spacing="6">
+      <TextBlock Classes="field-hint" Text="{Binding CharacterCountText}" />
+      <TextBlock Classes="status warning" Text="Unsaved changes" IsVisible="{Binding HasUnsavedChanges}" />
+      <StackPanel Orientation="Horizontal" Spacing="6">
+        <Button Classes="form-button compact" Content="Save" Command="{Binding SaveProfileCommand}" />
+        <Button Classes="form-button compact" Content="Reset changes" Command="{Binding ResetChangesCommand}" />
+      </StackPanel>
+      <TextBlock Classes="field-hint" TextWrapping="Wrap" Text="Only saved text is sent. Closing settings discards unsaved changes." />
+      <TextBlock Classes="status" TextWrapping="Wrap" Text="{Binding SaveStatus}"
+                 IsVisible="{Binding SaveStatus, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+      <TextBlock Classes="status danger" TextWrapping="Wrap" Text="{Binding Error}"
+                 IsVisible="{Binding Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+    </StackPanel>
+  </StackPanel>
+</UserControl>

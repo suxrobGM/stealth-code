@@ -24,3 +24,6 @@ jobs:
 
       - name: Build
         run: dotnet build src/StealthCode/StealthCode.csproj -c Release --no-restore
+
+      - name: Test
+        run: dotnet test --project tests/StealthCode.Tests/StealthCode.Tests.csproj -c Release

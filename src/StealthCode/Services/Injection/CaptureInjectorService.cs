@@ -1,4 +1,3 @@
-using System.Text;
 using CommunityToolkit.Mvvm.Messaging;
 using StealthCode.Messages;
 using StealthCode.Models;
@@ -42,6 +41,8 @@ public sealed class CaptureInjectorService(
         }
 
         var capture = settingsService.Settings.Capture;
+        var context = settingsService.Settings.Context;
+        var instructions = capture.SystemPrompt;
 
         // Off the UI thread: the blit, the restore wait, PNG encoding, and the base64 encode all block.
         var prompt = await Task.Run<string?>(() =>
@@ -54,15 +55,9 @@ public sealed class CaptureInjectorService(
 
             imagePath = imagePath.Replace('\\', '/');
 
-            return provider.ImageMode switch
-            {
-                ImageInputMode.FilePath =>
-                    $"{capture.SystemPrompt.Trim()} See the screenshot: {imagePath}",
-                ImageInputMode.Base64 =>
-                    $"{capture.SystemPrompt.Trim()} [base64:{Convert.ToBase64String(File.ReadAllBytes(imagePath))}]",
-                _ =>
-                    $"{capture.SystemPrompt.Trim()} See the screenshot: {imagePath}"
-            };
+            var image = provider.ImageMode == ImageInputMode.Base64
+                ? Convert.ToBase64String(File.ReadAllBytes(imagePath)) : imagePath;
+            return CandidateContextPromptBuilder.ForCapture(instructions, null, [image], provider.ImageMode, context);
         });
 
         if (prompt is null)
@@ -106,7 +101,9 @@ public sealed class CaptureInjectorService(
         }
 
         var capture = settingsService.Settings.Capture;
-        var multiCaptureSystemPrompt = capture.MultiCaptureSystemPrompt.Trim();
+        var multiCaptureSystemPrompt = capture.MultiCaptureSystemPrompt;
+        var instructions = capture.SystemPrompt;
+        var context = settingsService.Settings.Context;
 
         string[] paths = [.. pendingCaptures];
         pendingCaptures.Clear();
@@ -114,22 +111,9 @@ public sealed class CaptureInjectorService(
         // Off the UI thread: reading and base64-encoding every pending PNG blocks.
         var prompt = await Task.Run(() =>
         {
-            var sb = new StringBuilder();
-            sb.AppendLine(capture.SystemPrompt.Trim()); // Include the original prompt for context
-            sb.Append(multiCaptureSystemPrompt);
-
-            for (var i = 0; i < paths.Length; i++)
-            {
-                var path = paths[i];
-                sb.Append(provider.ImageMode switch
-                {
-                    ImageInputMode.FilePath => $" Screenshot {i + 1}: {path}",
-                    ImageInputMode.Base64 => $" Screenshot {i + 1}: [base64:{Convert.ToBase64String(File.ReadAllBytes(path))}]",
-                    _ => $" Screenshot {i + 1}: {path}"
-                });
-            }
-
-            return sb.ToString();
+            var images = provider.ImageMode == ImageInputMode.Base64
+                ? paths.Select(path => Convert.ToBase64String(File.ReadAllBytes(path))).ToArray() : paths;
+            return CandidateContextPromptBuilder.ForCapture(instructions, multiCaptureSystemPrompt, images, provider.ImageMode, context);
         });
 
         _ = PromptInjector.SendAsync(pty, prompt);

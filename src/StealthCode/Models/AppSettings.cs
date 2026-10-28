@@ -5,6 +5,14 @@ namespace StealthCode.Models;
 
 public sealed record class AppSettings
 {
+    private CandidateContextSettings context = new();
+
+    public CandidateContextSettings Context
+    {
+        get => Volatile.Read(ref context);
+        set => Volatile.Write(ref context, value);
+    }
+
     public string ActiveProviderId { get; set; } = "claude-code";
     public double WindowOpacity { get; set; } = 1.0;
     public bool AlwaysOnTop { get; set; }

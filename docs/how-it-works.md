@@ -23,6 +23,14 @@ Multi-capture: press the multi-capture hotkey for each screen while scrolling, t
 
 Settings > Audio picks the model, language, and pause length.
 
+### Saved candidate context
+
+Settings > Context stores background, experience stories, and a target job. Resume import runs locally: PdfPig reads PDFs, ZIP/XML reads DOCX, and BOM detection handles TXT encodings. Imported text is reviewed before replacing the draft; the source file is not retained.
+
+Save persists an immutable profile before making it available to requests. Context starts disabled. When enabled, the shared prompt builder includes saved facts in audio and screenshot requests, separates job requirements from experience, and asks the model to acknowledge missing information.
+
+Limits: 10 MiB per file, 20 MiB DOCX expansion, one million extracted characters, and 32,000 saved characters. Scanned PDFs need external OCR. Disabling context does not erase earlier CLI messages.
+
 ### GPU packs
 
 Only the CPU build ships. Faster backends download from nuget.org, are hash-checked, and unpack under `%APPDATA%\StealthCode\gpu`:

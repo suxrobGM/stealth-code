@@ -5,4 +5,5 @@
   <Project Path="src/StealthCode.Audio/StealthCode.Audio.csproj" />
   <Project Path="src/StealthCode.Updater/StealthCode.Updater.csproj" />
   <Project Path="src/StealthCode/StealthCode.csproj" />
+  <Project Path="tests/StealthCode.Tests/StealthCode.Tests.csproj" />
 </Solution>

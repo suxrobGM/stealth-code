@@ -8,14 +8,16 @@ public sealed partial class SettingsViewModel(
     GeneralSettingsViewModel general,
     CaptureSettingsViewModel capture,
     AudioSettingsViewModel audio,
+    ContextSettingsViewModel context,
     UpdateSettingsViewModel updates) : ViewModelBase
 {
     // Updates has nothing saved to fill in, so it stays out of the load/unload fan-out.
-    private readonly SettingsSectionViewModel[] sections = [general, capture, audio];
+    private readonly SettingsSectionViewModel[] sections = [general, capture, audio, context];
 
     public GeneralSettingsViewModel General { get; } = general;
     public CaptureSettingsViewModel Capture { get; } = capture;
     public AudioSettingsViewModel Audio { get; } = audio;
+    public ContextSettingsViewModel Context { get; } = context;
     public UpdateSettingsViewModel Updates { get; } = updates;
 
     /// <summary>One tab is visible at a time.</summary>
@@ -23,11 +25,13 @@ public sealed partial class SettingsViewModel(
     [NotifyPropertyChangedFor(nameof(IsGeneralTab))]
     [NotifyPropertyChangedFor(nameof(IsCaptureTab))]
     [NotifyPropertyChangedFor(nameof(IsAudioTab))]
+    [NotifyPropertyChangedFor(nameof(IsContextTab))]
     public partial SettingsTab SelectedTab { get; set; } = SettingsTab.General;
 
     public bool IsGeneralTab => SelectedTab == SettingsTab.General;
     public bool IsCaptureTab => SelectedTab == SettingsTab.Capture;
     public bool IsAudioTab => SelectedTab == SettingsTab.Audio;
+    public bool IsContextTab => SelectedTab == SettingsTab.Context;
 
     /// <summary>Fills every section from the saved settings and starts listening for messages.</summary>
     public void Load()
@@ -55,5 +59,6 @@ public enum SettingsTab
 {
     General,
     Capture,
-    Audio
+    Audio,
+    Context
 }

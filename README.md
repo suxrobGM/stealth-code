@@ -44,6 +44,7 @@ Stealth Code runs Claude Code, Codex, or Gemini CLI in a floating terminal that 
 - **Always on top, adjustable opacity.**
 - **Claude Code, Codex, Gemini CLI**, or a custom command.
 - **Editable prompts and hotkeys.** Portable single executable with built-in updates.
+- **Personal context.** Import a resume and add experience stories to ground background answers.
 
 ## Screenshots
 
@@ -76,6 +77,16 @@ Before a real call, share your screen in a test meeting and check the terminal i
 3. For a pasted problem, press `Ctrl+Shift+C`. For a long one, `Ctrl+Shift+X` per screen, then `Ctrl+Shift+C`.
 
 Use headphones so only the interviewer is transcribed. Tune the pause length, language, and prompts in Settings.
+
+## Personal context
+
+1. In **Settings > Context**, paste your background or import a PDF, DOCX, or TXT resume (up to 10 MiB).
+2. Review the import and choose **Replace background**. Add experience stories and the target job under **Opportunity**.
+3. Click **Save**, then enable **Use saved context**. The combined limit is 32,000 characters.
+
+Import runs locally; only saved text is sent with audio and screenshot requests. Closing settings discards unsaved edits. **Reset changes** restores saved text.
+
+Disabling context affects future requests. Earlier text remains in the CLI conversation. Review answers for accuracy.
 
 ## Shortcuts
 

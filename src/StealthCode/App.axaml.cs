@@ -89,6 +89,7 @@ public partial class App : Application
         services.AddSingleton<CaptureSettingsViewModel>();
         services.AddSingleton<GpuPackSettingsViewModel>();
         services.AddSingleton<AudioSettingsViewModel>();
+        services.AddSingleton<ContextSettingsViewModel>();
         services.AddSingleton<UpdateSettingsViewModel>();
         services.AddSingleton<SettingsViewModel>();
     }

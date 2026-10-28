@@ -97,7 +97,8 @@ public sealed class AudioInjectorService
     private void OnUtteranceCompleted(string text)
     {
         var audio = settingsService.Settings.Audio;
-        _ = PromptInjector.SendAsync(pty, $"{audio.SystemPrompt.Trim()}\n\n{text}");
+        var prompt = CandidateContextPromptBuilder.ForAudio(audio.SystemPrompt, text, settingsService.Settings.Context);
+        _ = PromptInjector.SendAsync(pty, prompt);
         Raise(live.IsListening, "Sent");
     }
 

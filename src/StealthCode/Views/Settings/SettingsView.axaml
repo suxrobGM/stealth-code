@@ -27,6 +27,9 @@
       <Button Classes="tab" Classes.selected="{Binding IsAudioTab}" Content="Audio"
               Command="{Binding SelectTabCommand}"
               CommandParameter="{x:Static settings:SettingsTab.Audio}" />
+      <Button Classes="tab" Classes.selected="{Binding IsContextTab}" Content="Context"
+              Command="{Binding SelectTabCommand}"
+              CommandParameter="{x:Static settings:SettingsTab.Context}" />
     </StackPanel>
 
     <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
@@ -40,6 +43,9 @@
         </Panel>
         <Panel IsVisible="{Binding IsAudioTab}">
           <views:AudioSection DataContext="{Binding Audio}" />
+        </Panel>
+        <Panel IsVisible="{Binding IsContextTab}">
+          <views:ContextSection DataContext="{Binding Context}" />
         </Panel>
       </Panel>
     </ScrollViewer>
