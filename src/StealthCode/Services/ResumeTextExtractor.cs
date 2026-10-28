@@ -2,6 +2,7 @@ using System.IO.Compression;
 using System.Text;
 using System.Xml;
 using System.Xml.Linq;
+using StealthCode.Models;
 using UglyToad.PdfPig;
 using UglyToad.PdfPig.DocumentLayoutAnalysis.TextExtractor;
 
@@ -12,7 +13,8 @@ public static class ResumeTextExtractor
 {
     public const int MaxFileBytes = 10 * 1024 * 1024;
     private const int MaxExpandedBytes = 20 * 1024 * 1024;
-    private const int MaxTextCharacters = 1_000_000;
+    // Room to trim a long resume down to the saved limit without laying out megabytes of text in the preview.
+    private const int MaxTextCharacters = 4 * CandidateContextSettings.MaxCharacters;
     private const string FileTooLarge = "The resume exceeds 10 MiB. Choose a smaller file or paste relevant text.";
     private const string DocxTooLarge = "The DOCX expands beyond 20 MiB. Export a smaller document or paste the text.";
     private static readonly XNamespace Word = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
