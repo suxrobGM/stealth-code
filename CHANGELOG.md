@@ -2,6 +2,17 @@
 
 All notable changes to Stealth Code will be documented in this file.
 
+## [1.4.0] - 2026-10-27
+
+### Features
+
+- **Candidate context** - a new Context tab in Settings holds your background, experience stories and the opportunity you are preparing for. When enabled, the saved profile is added to every audio and screenshot request so answers are grounded in your own experience
+- Import a resume (PDF, DOCX or TXT) to fill in the profile; the extracted text is shown for review before it replaces anything, and nothing is kept until you save
+
+### Improvements
+
+- Settings tabs are simpler: prompts are plain text boxes with a reset link, and hotkeys are laid out as a grid
+- Importing a very long resume no longer extracts far more text than the profile can hold
 ## [1.3.0] - 2026-09-06
 
 ### Features
