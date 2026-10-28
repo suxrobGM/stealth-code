@@ -13,6 +13,7 @@ All notable changes to Stealth Code will be documented in this file.
 
 - Settings tabs are simpler: prompts are plain text boxes with a reset link, and hotkeys are laid out as a grid
 - Importing a very long resume no longer extracts far more text than the profile can hold
+
 ## [1.3.0] - 2026-09-06
 
 ### Features
