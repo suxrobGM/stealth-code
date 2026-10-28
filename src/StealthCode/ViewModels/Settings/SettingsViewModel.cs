@@ -1,5 +1,4 @@
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 
 namespace StealthCode.ViewModels.Settings;
 
@@ -20,18 +19,9 @@ public sealed partial class SettingsViewModel(
     public ContextSettingsViewModel Context { get; } = context;
     public UpdateSettingsViewModel Updates { get; } = updates;
 
-    /// <summary>One tab is visible at a time.</summary>
+    /// <summary>Kept here so the open tab survives closing and reopening the panel.</summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsGeneralTab))]
-    [NotifyPropertyChangedFor(nameof(IsCaptureTab))]
-    [NotifyPropertyChangedFor(nameof(IsAudioTab))]
-    [NotifyPropertyChangedFor(nameof(IsContextTab))]
-    public partial SettingsTab SelectedTab { get; set; } = SettingsTab.General;
-
-    public bool IsGeneralTab => SelectedTab == SettingsTab.General;
-    public bool IsCaptureTab => SelectedTab == SettingsTab.Capture;
-    public bool IsAudioTab => SelectedTab == SettingsTab.Audio;
-    public bool IsContextTab => SelectedTab == SettingsTab.Context;
+    public partial int SelectedTabIndex { get; set; }
 
     /// <summary>Fills every section from the saved settings and starts listening for messages.</summary>
     public void Load()
@@ -50,15 +40,4 @@ public sealed partial class SettingsViewModel(
             section.Unload();
         }
     }
-
-    [RelayCommand]
-    private void SelectTab(SettingsTab tab) => SelectedTab = tab;
-}
-
-public enum SettingsTab
-{
-    General,
-    Capture,
-    Audio,
-    Context
 }

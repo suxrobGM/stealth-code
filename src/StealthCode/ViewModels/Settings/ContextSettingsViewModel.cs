@@ -45,7 +45,7 @@ public sealed partial class ContextSettingsViewModel(SettingsService settingsSer
 
     public int CharacterCount => Draft.CharacterCount;
     public string CharacterCountText => $"{CharacterCount:N0} / {CandidateContextSettings.MaxCharacters:N0} characters";
-    public string PreviewCharacterCountText => $"{ImportPreview.Length:N0} characters imported. Edit before replacing.";
+    public string PreviewCharacterCountText => $"Imported text ({ImportPreview.Length:N0} characters). Edit before replacing.";
     public bool HasUnsavedChanges => Draft != SettingsService.Settings.Context;
 
     /// <summary>The edited text with the saved Enabled flag, so it compares equal to an unchanged profile.</summary>
@@ -148,14 +148,14 @@ public sealed partial class ContextSettingsViewModel(SettingsService settingsSer
         SaveStatus = "";
         if (CharacterCount > CandidateContextSettings.MaxCharacters)
         {
-            Error = $"Keep background, stories, and opportunity within {CandidateContextSettings.MaxCharacters:N0} characters combined. Nothing was saved.";
+            Error = $"Over the {CandidateContextSettings.MaxCharacters:N0} character limit. Nothing was saved.";
             return;
         }
 
         var profile = Draft;
         if (TrySave(profile))
         {
-            SaveStatus = profile.Enabled ? "Saved. Context will accompany subsequent requests." : "Saved. Enable Use saved context to send it.";
+            SaveStatus = profile.Enabled ? "Saved." : "Saved. Turn on Send with every request to use it.";
             OnPropertyChanged(nameof(HasUnsavedChanges));
         }
     }
@@ -184,7 +184,7 @@ public sealed partial class ContextSettingsViewModel(SettingsService settingsSer
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
         {
-            Error = "Could not save context. The previous profile remains active; your draft is available to retry.";
+            Error = "Could not save. The previous profile stays active; retry when ready.";
             return false;
         }
     }

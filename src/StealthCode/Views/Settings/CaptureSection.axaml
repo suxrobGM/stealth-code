@@ -5,72 +5,54 @@
              x:Class="StealthCode.Views.Settings.CaptureSection"
              x:DataType="vm:CaptureSettingsViewModel">
 
-  <StackPanel Spacing="12">
+  <StackPanel Spacing="16">
 
     <StackPanel Spacing="4">
       <TextBlock Classes="field-label" Text="Mode" />
       <ComboBox Classes="form-input" HorizontalAlignment="Stretch"
                 SelectedValue="{Binding SelectedMode}"
                 SelectedValueBinding="{Binding Tag, x:DataType=ComboBoxItem}">
-        <ComboBoxItem Content="Full Screen" Tag="{x:Static capture:CaptureMode.FullScreen}" />
+        <ComboBoxItem Content="Full screen" Tag="{x:Static capture:CaptureMode.FullScreen}" />
         <ComboBoxItem Content="Region" Tag="{x:Static capture:CaptureMode.Region}" />
         <ComboBoxItem Content="Window" Tag="{x:Static capture:CaptureMode.Window}" />
       </ComboBox>
-    </StackPanel>
 
-    <StackPanel Spacing="4" IsVisible="{Binding IsRegionMode}">
-      <Button Classes="form-button" Content="Select Region"
-              Command="{Binding SelectRegionCommand}" />
-      <TextBlock Classes="field-label" Text="{Binding RegionDisplayText}"
-                 IsVisible="{Binding RegionDisplayText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
-    </StackPanel>
+      <DockPanel IsVisible="{Binding IsRegionMode}">
+        <Button DockPanel.Dock="Left" Classes="form-button" Content="Select region"
+                Command="{Binding SelectRegionCommand}" />
+        <TextBlock Classes="field-hint" Margin="8,0,0,0" VerticalAlignment="Center"
+                   Text="{Binding RegionDisplayText}" />
+      </DockPanel>
 
-    <StackPanel Spacing="4" IsVisible="{Binding IsWindowMode}">
-      <Button Classes="form-button" Content="Select Window"
-              Command="{Binding SelectWindowCommand}" />
-      <TextBlock Classes="field-label" Text="{Binding SelectedWindowTitle}"
-                 IsVisible="{Binding SelectedWindowTitle, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
-    </StackPanel>
-
-    <Border Classes="divider" />
-
-    <!-- Folded by default -->
-    <StackPanel Spacing="4">
-      <TextBlock Classes="field-label" Text="Prompt" />
-      <Button Classes="disclosure" Command="{Binding TogglePromptCommand}"
-              Content="{Binding SystemPromptPreview}"
-              IsVisible="{Binding !IsPromptExpanded}" />
-      <StackPanel Spacing="4" IsVisible="{Binding IsPromptExpanded}">
-        <TextBox Classes="form-input" Height="90"
-                 AcceptsReturn="True" TextWrapping="Wrap"
-                 Text="{Binding SystemPrompt}" />
-        <StackPanel Orientation="Horizontal" Spacing="6">
-          <Button Classes="form-button compact" Content="Reset to Default"
-                  Command="{Binding ResetPromptCommand}" />
-          <Button Classes="form-button compact" Content="Collapse"
-                  Command="{Binding TogglePromptCommand}" />
-        </StackPanel>
-      </StackPanel>
+      <DockPanel IsVisible="{Binding IsWindowMode}">
+        <Button DockPanel.Dock="Left" Classes="form-button" Content="Select window"
+                Command="{Binding SelectWindowCommand}" />
+        <TextBlock Classes="field-hint" Margin="8,0,0,0" VerticalAlignment="Center"
+                   TextTrimming="CharacterEllipsis" TextWrapping="NoWrap"
+                   Text="{Binding SelectedWindowTitle}" />
+      </DockPanel>
     </StackPanel>
 
     <StackPanel Spacing="4">
-      <TextBlock Classes="field-label" Text="Batch prompt" />
-      <Button Classes="disclosure" Command="{Binding ToggleMultiCapturePromptCommand}"
-              Content="{Binding MultiCaptureSystemPromptPreview}"
-              IsVisible="{Binding !IsMultiCapturePromptExpanded}" />
-      <StackPanel Spacing="4" IsVisible="{Binding IsMultiCapturePromptExpanded}">
-        <TextBox Classes="form-input" Height="90"
-                 AcceptsReturn="True" TextWrapping="Wrap"
-                 Text="{Binding MultiCaptureSystemPrompt}" />
-        <StackPanel Orientation="Horizontal" Spacing="6">
-          <Button Classes="form-button compact" Content="Reset to Default"
-                  Command="{Binding ResetMultiCapturePromptCommand}" />
-          <Button Classes="form-button compact" Content="Collapse"
-                  Command="{Binding ToggleMultiCapturePromptCommand}" />
-        </StackPanel>
-        <TextBlock Classes="field-hint"
-                   Text="Sent with a batch so the AI treats the screenshots as one document and ignores the overlap from scrolling" />
-      </StackPanel>
+      <DockPanel>
+        <Button DockPanel.Dock="Right" Classes="link" Content="Reset"
+                Command="{Binding ResetPromptCommand}" />
+        <TextBlock Classes="field-label" Text="Prompt" />
+      </DockPanel>
+      <TextBox Classes="form-input" Height="90" AcceptsReturn="True" TextWrapping="Wrap"
+               Text="{Binding SystemPrompt}" />
+    </StackPanel>
+
+    <StackPanel Spacing="4">
+      <DockPanel>
+        <Button DockPanel.Dock="Right" Classes="link" Content="Reset"
+                Command="{Binding ResetMultiCapturePromptCommand}" />
+        <TextBlock Classes="field-label" Text="Batch prompt" />
+      </DockPanel>
+      <TextBox Classes="form-input" Height="90" AcceptsReturn="True" TextWrapping="Wrap"
+               Text="{Binding MultiCaptureSystemPrompt}" />
+      <TextBlock Classes="field-hint"
+                 Text="Sent with a batch so the screenshots read as one document, ignoring scroll overlap." />
     </StackPanel>
 
   </StackPanel>

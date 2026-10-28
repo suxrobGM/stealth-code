@@ -7,7 +7,7 @@
              x:DataType="settings:SettingsViewModel"
              Width="320" Background="{StaticResource PanelBg}">
 
-  <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="16,12">
+  <Grid RowDefinitions="Auto,*,Auto" Margin="16,12">
 
     <DockPanel Grid.Row="0" Margin="0,0,0,12">
       <TextBlock DockPanel.Dock="Left" Classes="dialog-title" Text="Settings" />
@@ -16,41 +16,36 @@
               Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).ToggleSettingsCommand}" />
     </DockPanel>
 
-    <!-- One tab at a time -->
-    <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="2" Margin="0,0,0,14">
-      <Button Classes="tab" Classes.selected="{Binding IsGeneralTab}" Content="General"
-              Command="{Binding SelectTabCommand}"
-              CommandParameter="{x:Static settings:SettingsTab.General}" />
-      <Button Classes="tab" Classes.selected="{Binding IsCaptureTab}" Content="Capture"
-              Command="{Binding SelectTabCommand}"
-              CommandParameter="{x:Static settings:SettingsTab.Capture}" />
-      <Button Classes="tab" Classes.selected="{Binding IsAudioTab}" Content="Audio"
-              Command="{Binding SelectTabCommand}"
-              CommandParameter="{x:Static settings:SettingsTab.Audio}" />
-      <Button Classes="tab" Classes.selected="{Binding IsContextTab}" Content="Context"
-              Command="{Binding SelectTabCommand}"
-              CommandParameter="{x:Static settings:SettingsTab.Context}" />
-    </StackPanel>
+    <TabControl Grid.Row="1" Padding="0" SelectedIndex="{Binding SelectedTabIndex}">
+      <TabControl.ItemsPanel>
+        <ItemsPanelTemplate>
+          <UniformGrid Rows="1" Margin="0,0,0,14" />
+        </ItemsPanelTemplate>
+      </TabControl.ItemsPanel>
 
-    <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
-      <!-- Wrapper keeps IsVisible on this view model; the section swaps DataContext -->
-      <Panel>
-        <Panel IsVisible="{Binding IsGeneralTab}">
+      <TabItem Header="General">
+        <ScrollViewer>
           <views:GeneralSection DataContext="{Binding General}" />
-        </Panel>
-        <Panel IsVisible="{Binding IsCaptureTab}">
+        </ScrollViewer>
+      </TabItem>
+      <TabItem Header="Capture">
+        <ScrollViewer>
           <views:CaptureSection DataContext="{Binding Capture}" />
-        </Panel>
-        <Panel IsVisible="{Binding IsAudioTab}">
+        </ScrollViewer>
+      </TabItem>
+      <TabItem Header="Audio">
+        <ScrollViewer>
           <views:AudioSection DataContext="{Binding Audio}" />
-        </Panel>
-        <Panel IsVisible="{Binding IsContextTab}">
+        </ScrollViewer>
+      </TabItem>
+      <TabItem Header="Context">
+        <ScrollViewer>
           <views:ContextSection DataContext="{Binding Context}" />
-        </Panel>
-      </Panel>
-    </ScrollViewer>
+        </ScrollViewer>
+      </TabItem>
+    </TabControl>
 
-    <views:UpdateSection Grid.Row="3" Margin="0,12,0,0" DataContext="{Binding Updates}" />
+    <views:UpdateSection Grid.Row="2" Margin="0,12,0,0" DataContext="{Binding Updates}" />
 
   </Grid>
 </UserControl>

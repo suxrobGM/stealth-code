@@ -4,7 +4,6 @@ using CommunityToolkit.Mvvm.Messaging;
 using StealthCode.Messages;
 using StealthCode.ScreenCapture.Models;
 using StealthCode.Services;
-using StealthCode.Utilities;
 
 namespace StealthCode.ViewModels.Settings;
 
@@ -27,23 +26,10 @@ public sealed partial class CaptureSettingsViewModel(
     public partial string SelectedWindowTitle { get; set; } = "";
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(SystemPromptPreview))]
     public partial string SystemPrompt { get; set; } = "";
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(MultiCaptureSystemPromptPreview))]
     public partial string MultiCaptureSystemPrompt { get; set; } = "";
-
-    // Folded away by default; they are the tallest control here.
-    [ObservableProperty]
-    public partial bool IsPromptExpanded { get; set; }
-
-    [ObservableProperty]
-    public partial bool IsMultiCapturePromptExpanded { get; set; }
-
-    public string SystemPromptPreview => PromptPreview.Of(SystemPrompt);
-
-    public string MultiCaptureSystemPromptPreview => PromptPreview.Of(MultiCaptureSystemPrompt);
 
     public bool IsRegionMode => SelectedMode == CaptureMode.Region;
 
@@ -108,12 +94,6 @@ public sealed partial class CaptureSettingsViewModel(
     [RelayCommand]
     private void ResetMultiCapturePrompt() =>
         MultiCaptureSystemPrompt = new CaptureSettings().MultiCaptureSystemPrompt;
-
-    [RelayCommand]
-    private void TogglePrompt() => IsPromptExpanded = !IsPromptExpanded;
-
-    [RelayCommand]
-    private void ToggleMultiCapturePrompt() => IsMultiCapturePromptExpanded = !IsMultiCapturePromptExpanded;
 
     partial void OnSelectedModeChanged(CaptureMode value)
     {

@@ -5,7 +5,6 @@ using StealthCode.Audio.Downloads;
 using StealthCode.Audio.Models;
 using StealthCode.Messages;
 using StealthCode.Services;
-using StealthCode.Utilities;
 
 namespace StealthCode.ViewModels.Settings;
 
@@ -39,11 +38,7 @@ public sealed partial class AudioSettingsViewModel : SettingsSectionViewModel
     public partial double EndOfUtteranceSeconds { get; set; } = 1.8;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(SystemPromptPreview))]
     public partial string SystemPrompt { get; set; } = "";
-
-    [ObservableProperty]
-    public partial bool IsPromptExpanded { get; set; }
 
     /// <summary>Language, runtime and pack management: configured once, if ever.</summary>
     [ObservableProperty]
@@ -55,8 +50,6 @@ public sealed partial class AudioSettingsViewModel : SettingsSectionViewModel
 
     [ObservableProperty]
     public partial string DownloadModelButtonText { get; set; } = "Download Model";
-
-    public string SystemPromptPreview => PromptPreview.Of(SystemPrompt);
 
     /// <summary>The installer owns the flag, so a download that outlives this panel still reports itself.</summary>
     public bool IsModelDownloading => modelInstaller.IsDownloading;
@@ -76,9 +69,6 @@ public sealed partial class AudioSettingsViewModel : SettingsSectionViewModel
 
     [RelayCommand]
     private void ResetPrompt() => SystemPrompt = new AudioSettings().SystemPrompt;
-
-    [RelayCommand]
-    private void TogglePrompt() => IsPromptExpanded = !IsPromptExpanded;
 
     [RelayCommand]
     private void ToggleAdvanced() => IsAdvancedExpanded = !IsAdvancedExpanded;

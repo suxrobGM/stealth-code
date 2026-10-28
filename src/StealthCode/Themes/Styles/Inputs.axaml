@@ -56,4 +56,36 @@
     <Setter Property="Background" Value="{StaticResource AccentBrush}" />
   </Style>
 
+  <Style Selector="CheckBox">
+    <Setter Property="FontSize" Value="{StaticResource FontSizeXs}" />
+    <Setter Property="Foreground" Value="{StaticResource PrimaryFg}" />
+    <Setter Property="MinHeight" Value="24" />
+  </Style>
+
+  <!-- Settings tabs: equal-width segments, no Fluent selection pipe -->
+  <Style Selector="TabItem">
+    <Setter Property="FontSize" Value="{StaticResource FontSizeXs}" />
+    <Setter Property="MinHeight" Value="28" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="Margin" Value="1,0" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="Foreground" Value="{StaticResource MutedFg}" />
+    <Setter Property="CornerRadius" Value="{StaticResource CornerRadiusSm}" />
+  </Style>
+
+  <Style Selector="TabItem:selected">
+    <Setter Property="Background" Value="{StaticResource ControlBg}" />
+    <Setter Property="Foreground" Value="{StaticResource PrimaryFg}" />
+  </Style>
+
+  <Style Selector="TabItem:pointerover /template/ Border#PART_LayoutRoot">
+    <Setter Property="Background" Value="{StaticResource HoverBg}" />
+    <Setter Property="TextElement.Foreground" Value="{StaticResource PrimaryFg}" />
+  </Style>
+
+  <Style Selector="TabItem /template/ Border#PART_SelectedPipe">
+    <Setter Property="IsVisible" Value="False" />
+  </Style>
+
 </Styles>

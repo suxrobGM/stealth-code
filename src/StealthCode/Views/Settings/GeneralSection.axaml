@@ -41,32 +41,25 @@
     <StackPanel Spacing="8">
       <TextBlock Classes="section-header" Text="SHORTCUTS" />
 
-      <StackPanel Spacing="4">
-        <TextBlock Classes="field-label" Text="Capture and send" />
-        <controls:HotkeyTextBox Hotkey="{Binding CaptureHotkey, Mode=TwoWay}" />
-      </StackPanel>
+      <Grid ColumnDefinitions="*,150" RowDefinitions="Auto,Auto,Auto,Auto,Auto" RowSpacing="6">
+        <TextBlock Grid.Row="0" Classes="field-label" VerticalAlignment="Top" Margin="0,6,0,0" Text="Capture and send" />
+        <controls:HotkeyTextBox Grid.Row="0" Grid.Column="1" Hotkey="{Binding CaptureHotkey, Mode=TwoWay}" />
 
-      <StackPanel Spacing="4">
-        <TextBlock Classes="field-label" Text="Add to batch" />
-        <controls:HotkeyTextBox Hotkey="{Binding MultiCaptureHotkey, Mode=TwoWay}" />
-      </StackPanel>
+        <TextBlock Grid.Row="1" Classes="field-label" VerticalAlignment="Top" Margin="0,6,0,0" Text="Add to batch" />
+        <controls:HotkeyTextBox Grid.Row="1" Grid.Column="1" Hotkey="{Binding MultiCaptureHotkey, Mode=TwoWay}" />
 
-      <StackPanel Spacing="4">
-        <TextBlock Classes="field-label" Text="Listen" />
-        <controls:HotkeyTextBox Hotkey="{Binding AudioHotkey, Mode=TwoWay}" />
-      </StackPanel>
+        <TextBlock Grid.Row="2" Classes="field-label" VerticalAlignment="Top" Margin="0,6,0,0" Text="Listen" />
+        <controls:HotkeyTextBox Grid.Row="2" Grid.Column="1" Hotkey="{Binding AudioHotkey, Mode=TwoWay}" />
 
-      <StackPanel Spacing="4">
-        <TextBlock Classes="field-label" Text="Cycle opacity" />
-        <controls:HotkeyTextBox Hotkey="{Binding OpacityHotkey, Mode=TwoWay}" />
-      </StackPanel>
+        <TextBlock Grid.Row="3" Classes="field-label" VerticalAlignment="Top" Margin="0,6,0,0" Text="Cycle opacity" />
+        <controls:HotkeyTextBox Grid.Row="3" Grid.Column="1" Hotkey="{Binding OpacityHotkey, Mode=TwoWay}" />
 
-      <StackPanel Spacing="4">
-        <TextBlock Classes="field-label" Text="No-focus mode" />
-        <controls:HotkeyTextBox Hotkey="{Binding NoFocusHotkey, Mode=TwoWay}" />
-        <TextBlock Classes="field-hint"
-                   Text="Keeps the window from stealing focus when clicked, so your browser stays active" />
-      </StackPanel>
+        <TextBlock Grid.Row="4" Classes="field-label" VerticalAlignment="Top" Margin="0,6,0,0" Text="No-focus mode" />
+        <controls:HotkeyTextBox Grid.Row="4" Grid.Column="1" Hotkey="{Binding NoFocusHotkey, Mode=TwoWay}" />
+      </Grid>
+
+      <TextBlock Classes="field-hint"
+                 Text="No-focus mode keeps the window from stealing focus when clicked, so your browser stays active." />
 
       <TextBlock Classes="status danger" Text="{Binding HotkeyConflict}"
                  IsVisible="{Binding HotkeyConflict, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />

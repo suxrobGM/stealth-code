@@ -6,7 +6,7 @@
              x:Class="StealthCode.Views.Settings.AudioSection"
              x:DataType="vm:AudioSettingsViewModel">
 
-  <StackPanel Spacing="12">
+  <StackPanel Spacing="16">
 
     <StackPanel Spacing="4">
       <TextBlock Classes="field-label" Text="Model" />
@@ -20,17 +20,19 @@
         </ComboBox.ItemTemplate>
       </ComboBox>
 
-      <Button Classes="form-button"
-              Command="{Binding DownloadModelCommand}"
-              IsEnabled="{Binding !IsModelDownloading}"
-              Content="{Binding DownloadModelButtonText}" />
-
-      <StackPanel Spacing="4" IsVisible="{Binding IsModelDownloading}">
-        <ProgressBar Minimum="0" Maximum="100" Height="4"
-                     Value="{Binding DownloadProgress}" />
-        <Button Classes="form-button compact" Content="Cancel"
-                Command="{Binding CancelModelDownloadCommand}" />
-      </StackPanel>
+      <DockPanel>
+        <Button DockPanel.Dock="Left" Classes="form-button"
+                Command="{Binding DownloadModelCommand}"
+                IsEnabled="{Binding !IsModelDownloading}"
+                Content="{Binding DownloadModelButtonText}" />
+        <Button DockPanel.Dock="Right" Classes="link" Content="Cancel"
+                Command="{Binding CancelModelDownloadCommand}"
+                IsVisible="{Binding IsModelDownloading}" />
+        <ProgressBar Minimum="0" Maximum="100" Height="4" MinWidth="0" Margin="8,0"
+                     VerticalAlignment="Center"
+                     Value="{Binding DownloadProgress}"
+                     IsVisible="{Binding IsModelDownloading}" />
+      </DockPanel>
     </StackPanel>
 
     <StackPanel Spacing="4">
@@ -38,31 +40,23 @@
         <TextBlock Classes="field-label" DockPanel.Dock="Left" Text="Pause before sending"
                    VerticalAlignment="Center" />
         <TextBlock Classes="field-label" DockPanel.Dock="Right"
-                   VerticalAlignment="Center" HorizontalAlignment="Right"
+                   VerticalAlignment="Center" HorizontalAlignment="Right" Foreground="{StaticResource PrimaryFg}"
                    Text="{Binding EndOfUtteranceSeconds, StringFormat='{}{0:0.0} s'}" />
       </DockPanel>
       <Slider Minimum="1.0" Maximum="4.0"
               TickFrequency="0.1" IsSnapToTickEnabled="True"
               Value="{Binding EndOfUtteranceSeconds}" />
-      <TextBlock Classes="field-hint" Text="Silence after speech before the transcript is sent to the CLI." />
+      <TextBlock Classes="field-hint" Text="Silence after speech before the transcript is sent." />
     </StackPanel>
 
     <StackPanel Spacing="4">
-      <TextBlock Classes="field-label" Text="Prompt" />
-      <Button Classes="disclosure" Command="{Binding TogglePromptCommand}"
-              Content="{Binding SystemPromptPreview}"
-              IsVisible="{Binding !IsPromptExpanded}" />
-      <StackPanel Spacing="4" IsVisible="{Binding IsPromptExpanded}">
-        <TextBox Classes="form-input" Height="90"
-                 AcceptsReturn="True" TextWrapping="Wrap"
-                 Text="{Binding SystemPrompt}" />
-        <StackPanel Orientation="Horizontal" Spacing="6">
-          <Button Classes="form-button compact" Content="Reset to Default"
-                  Command="{Binding ResetPromptCommand}" />
-          <Button Classes="form-button compact" Content="Collapse"
-                  Command="{Binding TogglePromptCommand}" />
-        </StackPanel>
-      </StackPanel>
+      <DockPanel>
+        <Button DockPanel.Dock="Right" Classes="link" Content="Reset"
+                Command="{Binding ResetPromptCommand}" />
+        <TextBlock Classes="field-label" Text="Prompt" />
+      </DockPanel>
+      <TextBox Classes="form-input" Height="90" AcceptsReturn="True" TextWrapping="Wrap"
+               Text="{Binding SystemPrompt}" />
     </StackPanel>
 
     <Border Classes="divider" />
