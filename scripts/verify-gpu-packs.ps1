@@ -6,7 +6,7 @@ $ErrorActionPreference = "Stop"
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
 $root = Split-Path -Parent $PSScriptRoot
-$catalog = Get-Content (Join-Path $root "src\StealthCode.Audio\Services\GpuPackCatalog.cs") -Raw
+$catalog = Get-Content (Join-Path $root "src\StealthCode.Audio\Downloads\GpuPackCatalog.cs") -Raw
 $csproj = Get-Content (Join-Path $root "src\StealthCode.Audio\StealthCode.Audio.csproj") -Raw
 
 if ($csproj -notmatch '<WhisperVersion>([^<]+)</WhisperVersion>') { Write-Error "No <WhisperVersion> in the csproj" }
