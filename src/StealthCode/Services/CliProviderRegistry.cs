@@ -25,7 +25,7 @@ public sealed class CliProviderRegistry(SettingsService settingsService)
             Name = "Codex",
             Command = "codex",
             Args = [],
-            SupportsImageInput = false,
+            SupportsImageInput = true,
             ImageMode = ImageInputMode.FilePath,
             DefaultSystemPrompt = "Analyze the following screenshot and describe what you see."
         },
@@ -35,7 +35,7 @@ public sealed class CliProviderRegistry(SettingsService settingsService)
             Name = "Gemini CLI",
             Command = "gemini",
             Args = [],
-            SupportsImageInput = false,
+            SupportsImageInput = true,
             ImageMode = ImageInputMode.FilePath,
             DefaultSystemPrompt = "Analyze the following screenshot and describe what you see."
         }

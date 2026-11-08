@@ -63,6 +63,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase,
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(CaptureCommand))]
+    [NotifyCanExecuteChangedFor(nameof(MultiCaptureCommand))]
     [NotifyPropertyChangedFor(nameof(ActiveProvider))]
     [NotifyPropertyChangedFor(nameof(CanCapture))]
     [NotifyPropertyChangedFor(nameof(CaptureTip))]
@@ -157,8 +158,8 @@ public sealed partial class MainWindowViewModel : ViewModelBase,
 
         hotkeys.Bind(windowHandle, new Dictionary<string, Action>
         {
-            ["capture"] = RunCapture,
-            ["multicapture"] = () => MultiCaptureCommand.Execute(null),
+            ["capture"] = () => RunCapture(CaptureCommand),
+            ["multicapture"] = () => RunCapture(MultiCaptureCommand),
             ["audio"] = Audio.Toggle,
             ["opacity"] = () => CycleOpacityCommand.Execute(null),
             ["nofocus"] = () => ToggleNoFocusCommand.Execute(null)
@@ -185,7 +186,8 @@ public sealed partial class MainWindowViewModel : ViewModelBase,
         Status.PendingCaptureCount = captureInjectorService.PendingCount;
     }
 
-    [RelayCommand]
+    /// <summary>Gated like Capture: a batch the CLI cannot read could never be sent.</summary>
+    [RelayCommand(CanExecute = nameof(CanCapture))]
     private async Task MultiCapture()
     {
         await captureInjectorService.MultiCaptureAsync();
@@ -227,11 +229,11 @@ public sealed partial class MainWindowViewModel : ViewModelBase,
     }
 
     /// <summary>Hotkey path. A disabled command executes silently, so an unsupported CLI says so instead.</summary>
-    private void RunCapture()
+    private void RunCapture(IAsyncRelayCommand command)
     {
         if (CanCapture)
         {
-            CaptureCommand.Execute(null);
+            command.Execute(null);
             return;
         }
 
