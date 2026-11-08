@@ -2,6 +2,13 @@
 
 All notable changes to Stealth Code will be documented in this file.
 
+## [1.4.1] - 2026-11-07
+
+### Fixes
+
+- Screenshot capture now works with Codex and Gemini CLI; the capture button was greyed out even though both CLIs can read images
+- Multi-capture uses the same image-support check as single capture
+
 ## [1.4.0] - 2026-10-27
 
 ### Features
